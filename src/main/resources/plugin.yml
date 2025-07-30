@@ -1,0 +1,200 @@
+name: EssentialsD
+version: '2.3.2'
+main: cn.lunadeer.essentialsd.EssentialsD
+api-version: '1.21'
+description: Deer's Essentials Redesigned
+authors: ["lunadeer", "xiaomu18"]
+load: STARTUP
+folia-supported: true
+
+softdepend:
+  - LuckPerms
+  - PlaceholderAPI
+  - AuthMe
+
+permissions:
+  essd.*:
+    default: op
+    description: 允许使用 EssentialsD 的所有功能
+  essd.suicide:
+    default: true
+  essd.hat:
+    default: true
+  essd.showitem:
+    default: true
+  essd.skull:
+    default: true
+  essd.god:
+    default: op
+  essd.fly:
+    default: op
+    children:
+      essd.fly.other: true
+  essd.save:
+    default: op
+  essd.more:
+    default: op
+  essd.enderchest:
+    default: true
+  essd.tp.*:
+    default: true
+    children:
+      essd.tp.tpa: true
+      essd.tp.tpahere: true
+      essd.tp.rtp: true
+      essd.tp.back: true
+  essd.inspect:
+    default: op
+  essd.home:
+    default: true
+  essd.setwarp:
+    default: op
+  essd.delwarp:
+    default: op
+  essd.warp:
+    default: true
+  essd.mute:
+    default: op
+
+
+commands:
+  suicide:
+    description: 自杀
+    usage: /suicide
+    permission: essd.suicide
+    permission-message: 你不被允许自杀，快说“谢谢管理员”。
+  hat:
+    description: 将主手持的物品放在头部
+    usage: /hat
+    permission: essd.hat
+    permission-message: 管理员不允许你随便在头上放东西（没权限）。
+  showItem:
+    description: 展示主手持的物品
+    usage: /showitem
+    permission: essd.showitem
+    permission-message: 不要什么都想拿出来啊喂！（没权限）
+  skull:
+    description: 使用任意头颅交换获得一个自己的头颅
+    usage: /skull
+    permission: essd.skull
+    permission-message: 禁止献祭（没权限）。
+  god:
+    description: 无敌模式
+    usage: /god [player]
+    permission: essd.god
+    permission-message: 禁止成仙（没权限）。
+  fly:
+    description: 飞行模式
+    usage: /fly [player]
+    permission: essd.fly
+    permission-message: 禁止起飞（没权限）。
+  save:
+    description: 保存
+    usage: /save
+    permission: essd.save
+    permission-message: 保存失败（没权限）。
+  more:
+    description: 获取更多手持物品
+    usage: /more [amount]
+    permission: essd.more
+    permission-message: more不出来了（没权限）。
+  enderchest:
+    description: 通过指令打开末影箱
+    usage: /enderchest
+    permission: essd.enderchest
+    permission-message: 你没有权限快速打开末影箱。
+  tpa:
+    description: 发起传送请求
+    usage: /tpa <player>
+    permission: essd.tp.tpa
+    permission-message: 你没有权限发起传送请求。
+  tpahere:
+    description: 发起传送到自己的请求
+    usage: /tpahere <player>
+    permission: essd.tp.tpahere
+    permission-message: 你没有权限发起传送请求。
+  rtp:
+    description: 随机传送到附近
+    usage: /rtp
+    permission: essd.tp.rtp
+    permission-message: 你没有权限随机传送。
+  back:
+    description: 回到上一个传送点
+    usage: /back
+    permission: essd.tp.back
+    permission-message: 你没有权限回到上一个传送点。
+  inspect:
+    description: 检查玩家背包
+    usage: /inspect <player>
+    permission: essd.inspect
+    permission-message: 禁止偷窥（没权限）。
+  inspect-ender:
+    description: 检查玩家背包
+    usage: /inspect-ender <player>
+    permission: essd.inspect
+    permission-message: 禁止偷窥（没权限）。
+  home:
+    description: 回家
+    usage: /home [名称]
+    permission: essd.home
+    permission-message: 你没有权限使用home。
+  homes:
+    description: 查看家列表
+    usage: /homes
+    permission: essd.home
+    permission-message: 你没有权限使用home。
+  sethome:
+    description: 设置家
+    usage: /sethome [名称]
+    permission: essd.home
+    permission-message: 你没有权限使用home。
+  delhome:
+    description: 删除家
+    usage: /delhome <名称>
+    permission: essd.home
+    permission-message: 你没有权限使用home。
+  setwarp:
+    description: 设置传送点
+    usage: /setwarp <名称>
+    permission: essd.setwarp
+    permission-message: 你没有权限设置传送点。
+  delwarp:
+    description: 删除传送点
+    usage: /delwarp <名称>
+    permission: essd.delwarp
+    permission-message: 你没有权限删除传送点。
+  warp:
+    description: 传送到传送点
+    usage: /warp <名称>
+    permission: essd.warp
+    permission-message: 你没有权限传送到传送点。
+  warps:
+    description: 查看传送点列表
+    usage: /warps
+    permission: essd.warp
+    permission-message: 你没有权限查看传送点列表。
+  mute:
+    description: 禁言玩家
+    usage: /mute
+    permission: essd.mute
+    permission-message: 你没有权限使用此命令。
+  kickall:
+    description: 以特定理由清空服务器
+    usage: /kickall <reason>
+    permission: essd.kickall
+    permission-message: 你没有权限使用此命令。
+  inv:
+    description: 使自己隐身
+    usage: /inv
+    permission: essd.inv
+    permission-message: 你没有权限使用此命令。
+  essd:
+    description: The Control Of EssentialsD
+    usage: /essd reload
+    permission: essd.control
+    permission-message: 你没有权限使用此命令。
+  unmute:
+    description: 取消禁言
+    usage: /unmute p [player] or /unmute ip [player/address]
+    permission: essd.unmute
+    permission-message: 你没有权限使用此命令。
