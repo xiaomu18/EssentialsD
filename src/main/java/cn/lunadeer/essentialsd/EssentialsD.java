@@ -97,7 +97,13 @@ public final class EssentialsD extends JavaPlugin {
 
       // 注册命令
       commands.forEach((key, value) -> {
-         ((PluginCommand)Objects.requireNonNull(Bukkit.getPluginCommand(key))).setExecutor(value);
+         PluginCommand command = Bukkit.getPluginCommand(key);
+
+         if (command == null) {
+            getLogger().warning("注册命令 " + key + " 时失败, 此命令将不可使用...");
+         } else {
+            command.setExecutor(value);
+         }
       });
 
       if (config.getRecipesCrowbar()) {
