@@ -1,0 +1,94 @@
+
+#插件前缀
+prefix: "[EssentialsD]"
+
+# 数据库配置
+Database:
+  Type: sqlite          # pgsql, sqlite
+  Host: localhost       # 数据库地址
+  Port: 5432            # 数据库端口
+  Name: essentials_d    # 数据库名称
+  User: essentials_d    # 数据库用户名
+  Pass: essentials_d    # 数据库密码
+
+# 附魔瓶经验值倍率
+ExpBottleRatio: 1.0
+
+# 合并经验球
+CombineExpOrbs:
+  Enable: false
+  Radius: 1.5
+
+# 经验吸收无冷却
+NoExpCoolDown: false
+
+# 强加载区块列表
+ForceLoadChunks: [ ]
+#  - world:0:0
+#  - world_the_end:-12:12
+
+# 区块操作延迟（强加载清理、设置） 秒
+# 过低可能导致世界未加载完成时触发操作引起报错
+# -1 为禁用强加载区块操作
+ChunkOperateDelay: 10
+
+# 扩展合成表
+Recipes:
+  CrowBar: true                 # 撬棍
+  InvisibleItemFrame: true      # 隐形（发光）物品展示框
+  LightBlock: true              # 光源方块
+  StackedEnchantBook: true      # 附魔书堆叠
+
+# 传送
+Teleport:
+  Delay: 0            # 传送延迟 秒
+  CoolDown: 0         # 冷却时间 秒
+  TpaExpire: 30       # 传送请求有效期 秒
+  RtpRadius: 1000     # 随机传送最大半径
+  WorldBlackList: [ ] # 不允许传送的世界
+
+# 把楼梯当作椅子使用
+Chair:
+  Enable: true
+  MaxWidth: 4
+  SignCheck: false
+  SitHeight: -0.95
+
+# home 相关限制
+HomeLimit:
+  Amount: 5             # 数量限制
+  WorldBlackList: [ ]   # 不允许设置 home 的世界
+
+# 聊天功能 (需要安装 PlaceholderAPI)
+chat-func:
+  Enable: false
+  # 聊天格式，可以使用 minimessage 格式
+  ChatFormat: '<%player_name%> $player_message$'
+  cooldown: 2000 # 毫秒 (1s=1000ms)
+  forbid-keywords:
+    - "傻逼"
+    - "fuck"
+  forbid-message: "请不要说脏话"
+  # 掩耳盗铃模式: 开启后若被拦截消息仍可以发送，但消息不会被广播，而是仅自己可见
+  self-deception-mode: false
+  replace-words:
+    - ["abc1", "abc"]
+  # 开启后玩家发送的 minimessage 格式的消息将会被解析
+  allow-player-use-minimessage: false
+
+command-manager:
+  Enable: false
+  # 拥有 essd.bypass.CommandCD 权限可以绕过此限制
+  cooldown: 1000 # 毫秒 (1s=1000ms)
+  cd_message: "你使用命令太快，请稍后重试"
+  # 要禁用的命令, 仅拥有op权限的玩家可用
+  banned_command:
+    - "/op"
+    - "/deop"
+
+Creative-ItemTake:
+  banned-item:
+    - "BARRIER"
+  banned-nbt: false
+
+Debug: false
