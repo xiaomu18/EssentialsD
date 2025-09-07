@@ -9,6 +9,7 @@ cn\lunadeer\essentialsd\commands\God.class
 cn\lunadeer\essentialsd\commands\More.class
 cn\lunadeer\essentialsd\events\ChairEvent$1.class
 cn\lunadeer\minecraftpluginutils\stui\TuiHandler.class
+cn\lunadeer\essentialsd\commands\home\HomeEditor.class
 cn\lunadeer\essentialsd\events\ChairEvent.class
 cn\lunadeer\essentialsd\managers\TeleportManager.class
 cn\lunadeer\essentialsd\commands\home\DelHome.class

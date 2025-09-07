@@ -17,8 +17,8 @@ public class Suicide implements CommandExecutor {
          Player player = (Player)sender;
          player.setHealth((double)0.0F);
          player.setKiller(player);
-         player.sendMessage("§6再见, 这个令人伤心的世界!");
-         EssentialsD.instance.getServer().broadcastMessage("§6" + player.getName() + " 结束了自己的生命");
+         player.sendMessage("§6再见了, 这个令人伤心的世界!");
+         EssentialsD.instance.getServer().broadcastMessage("§6" + player.getName() + "结束了自己的生命");
          return true;
       }
    }

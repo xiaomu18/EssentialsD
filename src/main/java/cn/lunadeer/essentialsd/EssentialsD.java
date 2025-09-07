@@ -1,10 +1,7 @@
 package cn.lunadeer.essentialsd;
 
 import cn.lunadeer.essentialsd.commands.*;
-import cn.lunadeer.essentialsd.commands.home.DelHome;
-import cn.lunadeer.essentialsd.commands.home.Home;
-import cn.lunadeer.essentialsd.commands.home.Homes;
-import cn.lunadeer.essentialsd.commands.home.SetHome;
+import cn.lunadeer.essentialsd.commands.home.*;
 import cn.lunadeer.essentialsd.commands.tp.Back;
 import cn.lunadeer.essentialsd.commands.tp.Rtp;
 import cn.lunadeer.essentialsd.commands.tp.Tpa;
@@ -29,7 +26,6 @@ import cn.lunadeer.minecraftpluginutils.XLogger;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.PluginCommand;
@@ -94,6 +90,7 @@ public final class EssentialsD extends JavaPlugin {
       commands.put("kickall", new Kickall());
       commands.put("vanish", new Vanish());
       commands.put("essd", new Control());
+      commands.put("home-editor", new HomeEditor());
 
       // 注册命令
       commands.forEach((key, value) -> {

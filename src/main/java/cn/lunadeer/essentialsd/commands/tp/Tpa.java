@@ -20,7 +20,7 @@ public class Tpa implements CommandExecutor {
          if (args.length == 1) {
             Player target = EssentialsD.instance.getServer().getPlayer(args[0]);
             if (target == null || ((Vanish) EssentialsD.commands.get("vanish")).invList.contains(target.getUniqueId())) {
-               Notification.warn(player, "指定的玩家 %s 不在线", args[0]);
+               Notification.warn(player, "玩家 %s 不在线", args[0]);
                return true;
             } else {
                EssentialsD.tpManager.tpaRequest(player, target);

@@ -1,5 +1,5 @@
 name: EssentialsD
-version: '2.3.2'
+version: '2.3.7'
 main: cn.lunadeer.essentialsd.EssentialsD
 api-version: '1.21'
 description: Deer's Essentials Redesigned
@@ -29,7 +29,7 @@ permissions:
   essd.fly:
     default: op
     children:
-      essd.fly.other: true
+      essd.fly.other: false
   essd.save:
     default: op
   essd.more:
@@ -202,4 +202,9 @@ commands:
     description: 治愈指定玩家
     usage: /heal [玩家名]
     permission: essd.heal
+    permission-message: 你没有权限使用此命令。
+  home-editor:
+    description: 管理和查看其他玩家的家
+    usage: /home-editor <playerName> view/tp/remove (homeName)
+    permission: essd.home.use-editor
     permission-message: 你没有权限使用此命令。

@@ -57,7 +57,7 @@ public class ConfigManager {
    public List<String> CMD_BANNED_LIST;
    public Boolean CMD_ENABLE;
    public String CMD_CD_MESSAGE;
-   public Boolean allow_minimessage;
+   public String allow_minimessage_perm;
 
    public List<Material> forbidTakeItems = new ArrayList<>();
    public Boolean forbidNBTItem;
@@ -99,7 +99,7 @@ public class ConfigManager {
 
       this.chat_func_enable = this._file.getBoolean("chat-func.Enable", false);
       this.chat_format = this._file.getString("chat-func.ChatFormat", "<%player_name%> ");
-      this.allow_minimessage = this._file.getBoolean("chat-func.allow-player-use-minimessage", false);
+      this.allow_minimessage_perm = this._file.getString("chat-func.allow-minimessage-perm", "essd.chat.allow-use-minimessage");
 
       this.COOLDOWN_MS = this._file.getLong("chat-func.cooldown", 2000);
 

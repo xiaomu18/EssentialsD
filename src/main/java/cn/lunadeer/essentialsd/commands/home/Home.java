@@ -38,7 +38,7 @@ public class Home implements TabExecutor {
             return true;
          } else {
             try {
-               EssentialsD.tpManager.doTeleportDelayed(player, home.location, (Integer)EssentialsD.config.getTpDelay(), () -> Notification.info(player, "正在传送到家 %s", homeName), () -> Notification.info(player, "成功传送到家 %s", homeName));
+               EssentialsD.tpManager.doTeleportDelayed(player, home.location, EssentialsD.config.getTpDelay(), () -> Notification.info(player, "正在传送到家 %s", homeName), () -> Notification.info(player, "成功传送到家 %s", homeName));
             } catch (RuntimeException e) {
                Notification.error(player, "传送到家 %s 失败: %s", homeName, e.getMessage());
             }

@@ -73,8 +73,9 @@ chat-func:
   self-deception-mode: false
   replace-words:
     - ["abc1", "abc"]
-  # 开启后玩家发送的 minimessage 格式的消息将会被解析
-  allow-player-use-minimessage: false
+
+  # 拥有此权限的玩家发送 minimessage 格式的消息将会得到解析
+  allow-minimessage-perm: "essd.chat.allow-use-minimessage"
 
 command-manager:
   Enable: false

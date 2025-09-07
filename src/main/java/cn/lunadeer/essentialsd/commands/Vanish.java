@@ -82,6 +82,11 @@ public class Vanish implements CommandExecutor {
                 return true;
             }
 
+            if (!sender.isOp()) {
+                Notification.error(sender, "你没有权限操作玩家 " + player.getName() + " 的隐身状态");
+                return true;
+            }
+
             if (args[1].equals("on")) {
                 enable_player_inv(player);
                 Notification.info(sender, player.getName() + " 的隐身模式 已启用");

@@ -13,7 +13,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 import java.util.Map;
 import java.util.UUID;
@@ -90,29 +89,34 @@ public class ChatFunctionEvent implements Listener {
 
       if (EssentialsD.config.chat_func_enable) {
          event.setCancelled(true);
+
+         if (EssentialsD.config.isDebug()) {
+            EssentialsD.instance.getLogger().info("[DEBUG: Chat Raw Message] <" + player.getName() + "> " + event.getMessage());
+         }
+
          String formated = PlaceholderAPI.setPlaceholders(player, EssentialsD.config.chat_format);
          Component parsed = MiniMessage.miniMessage().deserialize(convertLegacyToMiniMessage(formated));
 
          TextReplacementConfig replacement;
+         String replaceMessage;
 
-         if (EssentialsD.config.allow_minimessage) {
-            replacement = TextReplacementConfig.builder()
-                    .matchLiteral("$player_message$")
-                    .replacement(MiniMessage.miniMessage().deserialize(event.getMessage())) // 纯文本，不会解析 MiniMessage
-                    .build();
+         if (player.hasPermission(EssentialsD.config.allow_minimessage_perm)) {
+            replaceMessage = event.getMessage();
          } else {
-            replacement = TextReplacementConfig.builder()
-                    .matchLiteral("$player_message$")
-                    .replacement(event.getMessage()) // 纯文本，不会解析 MiniMessage
-                    .build();
+            replaceMessage = event.getMessage().replace("<", "\\<");
          }
+
+         replacement = TextReplacementConfig.builder()
+                 .matchLiteral("$player_message$")
+                 .replacement(MiniMessage.miniMessage().deserialize(convertLegacyToMiniMessage(replaceMessage))) // 纯文本，不会解析 MiniMessage
+                 .build();
 
          // 执行替换
          parsed = parsed.replaceText(replacement);
 
          if (self_deception) {
             player.sendMessage(parsed);
-            EssentialsD.instance.getServer().getLogger().info("[自我欺骗: 仅自己可见] " + player.getName() + ": " + event.getMessage());
+            EssentialsD.instance.getServer().getLogger().info("[仅自己可见] " + player.getName() + ": " + event.getMessage());
             return;
          }
          // 向全服广播（包括控制台）
@@ -121,6 +125,9 @@ public class ChatFunctionEvent implements Listener {
    }
 
    private static String convertLegacyToMiniMessage(String message) {
+      // 先处理十六进制颜色代码 (§#FFFFFF 格式)
+      message = message.replaceAll("§(#([0-9a-fA-F]{6}))", "<$1>");
+
       // 替换颜色代码
       message = message.replace("§0", "<black>");
       message = message.replace("§1", "<dark_blue>");
