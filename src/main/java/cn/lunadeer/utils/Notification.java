@@ -24,6 +24,13 @@ public class Notification {
         this.sender = new SendMessageAbstract(plugin);
     }
 
+    public static void reloadPrefix(JavaPlugin plugin) {
+        if (instance == null) {
+            return;
+        }
+        instance.setPrefix(plugin.getConfig().getString("prefix", "[EssentialsD]"));
+    }
+
     public void setPrefix(String prefix) {
         this.prefix = prefix;
     }

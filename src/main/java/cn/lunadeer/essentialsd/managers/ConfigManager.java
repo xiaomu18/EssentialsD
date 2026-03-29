@@ -2,6 +2,7 @@ package cn.lunadeer.essentialsd.managers;
 
 import cn.lunadeer.essentialsd.EssentialsD;
 import cn.lunadeer.essentialsd.utils.MuteDuration;
+import cn.lunadeer.utils.Notification;
 import cn.lunadeer.utils.XLogger;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -71,6 +72,7 @@ public class ConfigManager {
     public void reload() {
         this._plugin.reloadConfig();
         this._file = this._plugin.getConfig();
+        Notification.reloadPrefix(this._plugin);
 
         this._debug = this._file.getBoolean("Debug", false);
         XLogger.setDebug(this.isDebug());
