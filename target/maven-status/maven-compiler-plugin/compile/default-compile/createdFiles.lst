@@ -14,6 +14,7 @@ cn\lunadeer\essentialsd\recipes\InvisibleGlowItemFrame.class
 cn\lunadeer\essentialsd\events\CreativeTakeListener.class
 cn\lunadeer\utils\command\InvalidArgumentException.class
 cn\lunadeer\essentialsd\commands\EnderChest.class
+cn\lunadeer\essentialsd\utils\MuteDuration$ParseResult.class
 cn\lunadeer\essentialsd\dtos\LoginRecord.class
 cn\lunadeer\utils\stui\components\buttons\PermissionButton.class
 cn\lunadeer\essentialsd\events\Experience.class
@@ -21,8 +22,10 @@ cn\lunadeer\utils\ParticleRender.class
 cn\lunadeer\utils\command\Argument.class
 cn\lunadeer\utils\command\Option.class
 cn\lunadeer\essentialsd\commands\Kickall.class
+cn\lunadeer\essentialsd\utils\MuteDuration.class
 cn\lunadeer\essentialsd\commands\Apis.class
 cn\lunadeer\essentialsd\events\InvisibleItemFrameEvent.class
+cn\lunadeer\essentialsd\managers\MuteManager$TargetType.class
 cn\lunadeer\essentialsd\events\CrowEvent.class
 cn\lunadeer\utils\Teleport.class
 cn\lunadeer\utils\command\NoPermissionException.class
@@ -40,6 +43,7 @@ cn\lunadeer\utils\stui\components\Line.class
 cn\lunadeer\essentialsd\utils\SeatManager.class
 cn\lunadeer\essentialsd\commands\Heal.class
 cn\lunadeer\essentialsd\commands\tp\Rtp.class
+cn\lunadeer\essentialsd\managers\MuteManager.class
 cn\lunadeer\utils\stui\TextUserInterfaceManager.class
 cn\lunadeer\essentialsd\commands\Vanish.class
 cn\lunadeer\essentialsd\commands\tp\Tpa.class
@@ -78,9 +82,11 @@ cn\lunadeer\essentialsd\commands\home\SetHome.class
 cn\lunadeer\essentialsd\commands\warp\Warps.class
 cn\lunadeer\essentialsd\commands\Fly.class
 cn\lunadeer\essentialsd\tuis\HomeList$1.class
+cn\lunadeer\essentialsd\managers\MuteManager$Entry.class
 cn\lunadeer\utils\Misc.class
 cn\lunadeer\utils\stui\components\buttons\FunctionalButton$1.class
 cn\lunadeer\utils\DatabaseManager.class
+cn\lunadeer\essentialsd\commands\Mute$ResolvedIpTarget.class
 cn\lunadeer\essentialsd\utils\LocUtil.class
 cn\lunadeer\utils\stui\ListView.class
 cn\lunadeer\essentialsd\commands\Mute.class

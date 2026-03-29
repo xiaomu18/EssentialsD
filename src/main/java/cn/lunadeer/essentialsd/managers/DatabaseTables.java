@@ -17,6 +17,8 @@ public class DatabaseTables {
         EssentialsD.database.query(sql);
         sql = "CREATE TABLE IF NOT EXISTS command_record ( id                SERIAL PRIMARY KEY, executor_uuid     VARCHAR(36) NOT NULL, command           TEXT NOT NULL, time              TIMESTAMP NOT NULL, FOREIGN KEY (executor_uuid) REFERENCES player_name(uuid) ON DELETE CASCADE);";
         EssentialsD.database.query(sql);
+        sql = "CREATE TABLE IF NOT EXISTS mute_record ( id                SERIAL PRIMARY KEY, target_type       TEXT NOT NULL, target_value      TEXT NOT NULL, target_name       TEXT, created_by        TEXT, created_at        TIMESTAMP NOT NULL, expires_at        TIMESTAMP, UNIQUE (target_type, target_value));";
+        EssentialsD.database.query(sql);
         sql = "CREATE TABLE IF NOT EXISTS home_info ( id                SERIAL PRIMARY KEY, uuid              VARCHAR(36) NOT NULL, home_name         TEXT NOT NULL, location          TEXT NOT NULL, FOREIGN KEY (uuid) REFERENCES player_name(uuid) ON DELETE CASCADE);";
         EssentialsD.database.query(sql);
         sql = "CREATE TABLE IF NOT EXISTS warp_point ( id                SERIAL PRIMARY KEY, warp_name         TEXT NOT NULL, location          TEXT NOT NULL);";

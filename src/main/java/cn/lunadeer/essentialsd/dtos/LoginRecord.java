@@ -61,4 +61,25 @@ public class LoginRecord {
             EssentialsD.database.handleDatabaseError("创建登录记录失败", e, sql);
         }
     }
+
+    public static String getLatestIp(UUID uuid) {
+        String sql = "SELECT ip FROM login_record WHERE uuid = ? ORDER BY logout_time DESC LIMIT 1;";
+
+        try {
+            ResultSet rs = EssentialsD.database.query(sql, uuid.toString());
+            try {
+                if (rs == null || !rs.next()) {
+                    return null;
+                }
+                return rs.getString("ip");
+            } finally {
+                if (rs != null) {
+                    rs.close();
+                }
+            }
+        } catch (Exception e) {
+            EssentialsD.database.handleDatabaseError("获取玩家最近登录 IP 失败", e, sql);
+            return null;
+        }
+    }
 }

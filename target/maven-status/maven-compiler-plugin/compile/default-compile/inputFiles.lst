@@ -49,6 +49,7 @@ C:\Users\ttpa\IdeaProjects\EssentialsD\src\main\java\cn\lunadeer\essentialsd\eve
 C:\Users\ttpa\IdeaProjects\EssentialsD\src\main\java\cn\lunadeer\essentialsd\events\TeleportEvent.java
 C:\Users\ttpa\IdeaProjects\EssentialsD\src\main\java\cn\lunadeer\essentialsd\managers\ConfigManager.java
 C:\Users\ttpa\IdeaProjects\EssentialsD\src\main\java\cn\lunadeer\essentialsd\managers\DatabaseTables.java
+C:\Users\ttpa\IdeaProjects\EssentialsD\src\main\java\cn\lunadeer\essentialsd\managers\MuteManager.java
 C:\Users\ttpa\IdeaProjects\EssentialsD\src\main\java\cn\lunadeer\essentialsd\managers\TeleportManager.java
 C:\Users\ttpa\IdeaProjects\EssentialsD\src\main\java\cn\lunadeer\essentialsd\recipes\Crowbar.java
 C:\Users\ttpa\IdeaProjects\EssentialsD\src\main\java\cn\lunadeer\essentialsd\recipes\InvisibleGlowItemFrame.java
@@ -58,6 +59,7 @@ C:\Users\ttpa\IdeaProjects\EssentialsD\src\main\java\cn\lunadeer\essentialsd\rec
 C:\Users\ttpa\IdeaProjects\EssentialsD\src\main\java\cn\lunadeer\essentialsd\tuis\HomeList.java
 C:\Users\ttpa\IdeaProjects\EssentialsD\src\main\java\cn\lunadeer\essentialsd\tuis\WarpList.java
 C:\Users\ttpa\IdeaProjects\EssentialsD\src\main\java\cn\lunadeer\essentialsd\utils\LocUtil.java
+C:\Users\ttpa\IdeaProjects\EssentialsD\src\main\java\cn\lunadeer\essentialsd\utils\MuteDuration.java
 C:\Users\ttpa\IdeaProjects\EssentialsD\src\main\java\cn\lunadeer\essentialsd\utils\SeatManager.java
 C:\Users\ttpa\IdeaProjects\EssentialsD\src\main\java\cn\lunadeer\essentialsd\utils\Time.java
 C:\Users\ttpa\IdeaProjects\EssentialsD\src\main\java\cn\lunadeer\utils\command\Argument.java

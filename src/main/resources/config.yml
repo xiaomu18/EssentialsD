@@ -76,6 +76,20 @@ chat:
   forbid-message: "请不要说脏话"
   # 掩耳盗铃模式: 开启后若被拦截消息仍可以发送，但消息不会被广播，而是仅自己可见
   self-deception-mode: false
+  mute:
+    # 留空时使用此默认禁言时长，支持 30m / 1h / 7d / permanent
+    default-duration: "permanent"
+    # 1 或 block: 直接阻止发送
+    # 2 或 self-deception: 消息看起来发出去了，但只对自己可见
+    mode: "block"
+    # 被禁言时额外禁止使用的命令，仅匹配主命令名
+    blocked-commands:
+      - "msg"
+      - "tell"
+      - "w"
+      - "me"
+    block-message: "你已被禁言"
+    blocked-command-message: "你已被禁言，暂时无法使用此命令"
   replace-words:
     - ["abc1", "abc"]
 

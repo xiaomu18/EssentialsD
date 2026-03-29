@@ -24,6 +24,12 @@ public class CommandPreprocessEvent implements Listener {
         // 跳过没有实际内容的命令
         if (message.length() < 2) return;
 
+        if (EssentialsD.muteManager.getMute(player) != null && EssentialsD.muteManager.isBlockedCommand(message)) {
+            event.setCancelled(true);
+            Notification.warn(player, EssentialsD.config.MUTE_BLOCKED_COMMAND_MESSAGE);
+            return;
+        }
+
         if (!EssentialsD.config.CMD_ENABLE) {
             return;
         }

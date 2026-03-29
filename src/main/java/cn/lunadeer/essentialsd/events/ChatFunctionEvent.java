@@ -1,7 +1,7 @@
 package cn.lunadeer.essentialsd.events;
 
 import cn.lunadeer.essentialsd.EssentialsD;
-import cn.lunadeer.essentialsd.commands.Mute;
+import cn.lunadeer.essentialsd.managers.MuteManager;
 import cn.lunadeer.utils.Notification;
 import fr.xephi.authme.api.v3.AuthMeApi;
 import me.clip.placeholderapi.PlaceholderAPI;
@@ -33,6 +33,7 @@ public class ChatFunctionEvent implements Listener {
         }
 
         Player player = event.getPlayer();
+        boolean self_deception = false;
 
         if (Bukkit.getPluginManager().isPluginEnabled("AuthMe")) {
             if (!AuthMeApi.getInstance().isAuthenticated(player)) {
@@ -42,18 +43,15 @@ public class ChatFunctionEvent implements Listener {
             }
         }
 
-        if (((Mute) EssentialsD.commands.get("mute")).mutedList.contains(player.getUniqueId())) {
-            Notification.warn(player, "你已被禁言");
-            event.setCancelled(true);
-            return;
+        MuteManager.Entry muteEntry = EssentialsD.muteManager.getMute(player);
+        if (muteEntry != null) {
+            if (!EssentialsD.muteManager.isSelfDeceptionMode()) {
+                Notification.warn(player, EssentialsD.config.MUTE_BLOCK_MESSAGE);
+                event.setCancelled(true);
+                return;
+            }
+            self_deception = true;
         }
-        if (((Mute) EssentialsD.commands.get("mute")).mutedIpList.contains(player.getAddress().getHostString())) {
-            Notification.warn(player, "你已被禁言");
-            event.setCancelled(true);
-            return;
-        }
-
-        boolean self_deception = false;
 
         if (EssentialsD.config.chat_func_enable && !player.isOp()) {
             UUID uuid = player.getUniqueId();
@@ -91,6 +89,15 @@ public class ChatFunctionEvent implements Listener {
                     event.setMessage(event.getMessage().replace(key, value));
                 }
             });
+        }
+
+        if (!EssentialsD.config.chat_func_enable) {
+            if (self_deception) {
+                event.setCancelled(true);
+                player.sendMessage(Component.text("<" + player.getName() + "> " + event.getMessage()));
+                EssentialsD.instance.getServer().getLogger().info("[仅自己可见] " + player.getName() + ": " + event.getMessage());
+            }
+            return;
         }
 
         if (EssentialsD.config.chat_func_enable) {

@@ -13,6 +13,7 @@ import cn.lunadeer.essentialsd.commands.warp.Warps;
 import cn.lunadeer.essentialsd.events.*;
 import cn.lunadeer.essentialsd.managers.ConfigManager;
 import cn.lunadeer.essentialsd.managers.DatabaseTables;
+import cn.lunadeer.essentialsd.managers.MuteManager;
 import cn.lunadeer.essentialsd.managers.TeleportManager;
 import cn.lunadeer.essentialsd.recipes.*;
 import cn.lunadeer.utils.DatabaseManager;
@@ -33,6 +34,7 @@ public final class EssentialsD extends JavaPlugin {
     public static ConfigManager config;
     public static TeleportManager tpManager;
     public static DatabaseManager database;
+    public static MuteManager muteManager;
     public static Map<String, CommandExecutor> commands = new HashMap<>();
 
     public void onEnable() {
@@ -42,6 +44,7 @@ public final class EssentialsD extends JavaPlugin {
         new Notification(instance);
         database = new DatabaseManager(this, DatabaseManager.TYPE.valueOf(config.getDbType().toUpperCase()), config.getDbHost(), config.getDbPort(), config.getDbName(), config.getDbUser(), config.getDbPass());
         DatabaseTables.migrate();
+        muteManager = new MuteManager();
         new Scheduler(this);
         tpManager = new TeleportManager();
         new TextUserInterfaceManager(this);

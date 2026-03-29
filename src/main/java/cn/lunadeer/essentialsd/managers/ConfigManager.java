@@ -1,6 +1,7 @@
 package cn.lunadeer.essentialsd.managers;
 
 import cn.lunadeer.essentialsd.EssentialsD;
+import cn.lunadeer.essentialsd.utils.MuteDuration;
 import cn.lunadeer.utils.Scheduler;
 import cn.lunadeer.utils.XLogger;
 import org.bukkit.Chunk;
@@ -12,6 +13,7 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class ConfigManager {
@@ -56,6 +58,11 @@ public class ConfigManager {
     public Boolean CMD_ENABLE;
     public String CMD_CD_MESSAGE;
     public String allow_minimessage_perm;
+    public String MUTE_DEFAULT_DURATION;
+    public String MUTE_MODE;
+    public List<String> MUTE_BLOCKED_COMMANDS;
+    public String MUTE_BLOCK_MESSAGE;
+    public String MUTE_BLOCKED_COMMAND_MESSAGE;
 
     public List<Material> forbidTakeItems = new ArrayList<>();
     public Boolean forbidNBTItem;
@@ -109,6 +116,15 @@ public class ConfigManager {
         this.replaceWords = get_replace_words();
         this.self_deception_mode = this._file.getBoolean("chat.self-deception-mode");
         this.forbidMessage = this._file.getString("chat.forbid-message");
+        this.MUTE_DEFAULT_DURATION = this._file.getString("chat.mute.default-duration", "permanent");
+        if (!MuteDuration.parse(this.MUTE_DEFAULT_DURATION).isValid()) {
+            XLogger.warn("chat.mute.default-duration 配置无效，已回退为 permanent");
+            this.MUTE_DEFAULT_DURATION = "permanent";
+        }
+        this.MUTE_MODE = normalizeMuteMode(this._file.getString("chat.mute.mode", "block"));
+        this.MUTE_BLOCKED_COMMANDS = normalizeCommands(this._file.getStringList("chat.mute.blocked-commands"));
+        this.MUTE_BLOCK_MESSAGE = this._file.getString("chat.mute.block-message", "你已被禁言");
+        this.MUTE_BLOCKED_COMMAND_MESSAGE = this._file.getString("chat.mute.blocked-command-message", "你已被禁言，暂时无法使用此命令");
         List<String> forbidItemNames = this._file.getStringList("Creative-ItemTake.banned-item");
 
         forbidTakeItems.clear();
@@ -161,6 +177,42 @@ public class ConfigManager {
         }
 
         return wordReplacements;
+    }
+
+    private String normalizeMuteMode(String mode) {
+        if (mode == null) {
+            return "block";
+        }
+        String normalized = mode.trim().toLowerCase(Locale.ROOT);
+        if (normalized.equals("2") || normalized.equals("self_deception")) {
+            return "self-deception";
+        }
+        if (!normalized.equals("block") && !normalized.equals("1") && !normalized.equals("self-deception")) {
+            XLogger.warn("chat.mute.mode 配置无效，已回退为 block");
+            return "block";
+        }
+        return normalized.equals("1") ? "block" : normalized;
+    }
+
+    private List<String> normalizeCommands(List<String> commands) {
+        List<String> normalized = new ArrayList<>();
+        for (String command : commands) {
+            if (command == null || command.isBlank()) {
+                continue;
+            }
+            String value = command.trim().toLowerCase(Locale.ROOT);
+            while (value.startsWith("/")) {
+                value = value.substring(1);
+            }
+            int namespaceIndex = value.indexOf(':');
+            if (namespaceIndex >= 0 && namespaceIndex + 1 < value.length()) {
+                value = value.substring(namespaceIndex + 1);
+            }
+            if (!value.isBlank()) {
+                normalized.add(value);
+            }
+        }
+        return normalized;
     }
 
     private void saveAll() {
