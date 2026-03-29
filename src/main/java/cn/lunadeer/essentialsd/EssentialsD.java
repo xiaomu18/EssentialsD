@@ -14,6 +14,7 @@ import cn.lunadeer.essentialsd.commands.warp.Warps;
 import cn.lunadeer.essentialsd.events.*;
 import cn.lunadeer.essentialsd.managers.ConfigManager;
 import cn.lunadeer.essentialsd.managers.DatabaseTables;
+import cn.lunadeer.essentialsd.managers.inspect.InspectManager;
 import cn.lunadeer.essentialsd.managers.MuteManager;
 import cn.lunadeer.essentialsd.managers.TeleportManager;
 import cn.lunadeer.essentialsd.recipes.*;
@@ -39,6 +40,7 @@ public final class EssentialsD extends JavaPlugin {
     public static TeleportManager tpManager;
     public static DatabaseManager database;
     public static MuteManager muteManager;
+    public static InspectManager inspectManager;
     public static Map<String, CommandExecutor> commands = new HashMap<>();
     private String buildDate = "未知";
     private String projectUrl = "https://github.com/xiaomu18/EssentialsD";
@@ -54,6 +56,7 @@ public final class EssentialsD extends JavaPlugin {
         muteManager = new MuteManager();
         new Scheduler(this);
         tpManager = new TeleportManager();
+        inspectManager = new InspectManager();
         new TextUserInterfaceManager(this);
 
         Bukkit.getPluginManager().registerEvents(new ChatFunctionEvent(), this);
@@ -68,6 +71,7 @@ public final class EssentialsD extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new Experience(), this);
         Bukkit.getPluginManager().registerEvents(new CreativeTakeListener(), this);
         Bukkit.getPluginManager().registerEvents(new CommandPreprocessEvent(), this);
+        Bukkit.getPluginManager().registerEvents(new InspectInventoryEvent(), this);
 
         commands.put("fly", new Fly());
         commands.put("god", new God());
@@ -75,7 +79,6 @@ public final class EssentialsD extends JavaPlugin {
         commands.put("heal", new Heal());
         commands.put("more", new More());
         commands.put("inspect", new Inspect());
-        commands.put("inspect-ender", commands.get("inspect"));
         commands.put("enderchest", new EnderChest());
         commands.put("suicide", new Suicide());
         commands.put("hat", new Hat());

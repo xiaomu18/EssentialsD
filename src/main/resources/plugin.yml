@@ -182,11 +182,7 @@ commands:
     permission: essd.tp.back
   inspect:
     description: Inspect a player's inventory
-    usage: /inspect <player>
-    permission: essd.inspect
-  inspect-ender:
-    description: Inspect a player's ender chest
-    usage: /inspect-ender <player>
+    usage: /inspect <player> [--ender]
     permission: essd.inspect
   home:
     description: Teleport to a home
