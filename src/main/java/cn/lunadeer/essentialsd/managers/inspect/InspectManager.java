@@ -2,6 +2,10 @@ package cn.lunadeer.essentialsd.managers.inspect;
 
 import cn.lunadeer.utils.Notification;
 import cn.lunadeer.utils.Scheduler;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -35,17 +39,17 @@ public class InspectManager {
 
     static {
         Arrays.fill(PLAYER_GUI_TO_SLOT, -1);
+        PLAYER_GUI_TO_SLOT[1] = 39;
+        PLAYER_GUI_TO_SLOT[2] = 38;
+        PLAYER_GUI_TO_SLOT[3] = 37;
+        PLAYER_GUI_TO_SLOT[4] = 36;
+        PLAYER_GUI_TO_SLOT[6] = 40;
         for (int i = 0; i < 27; i++) {
-            PLAYER_GUI_TO_SLOT[i] = i + 9;
+            PLAYER_GUI_TO_SLOT[18 + i] = i + 9;
         }
         for (int i = 0; i < 9; i++) {
-            PLAYER_GUI_TO_SLOT[27 + i] = i;
+            PLAYER_GUI_TO_SLOT[45 + i] = i;
         }
-        PLAYER_GUI_TO_SLOT[45] = 39;
-        PLAYER_GUI_TO_SLOT[46] = 38;
-        PLAYER_GUI_TO_SLOT[47] = 37;
-        PLAYER_GUI_TO_SLOT[48] = 36;
-        PLAYER_GUI_TO_SLOT[49] = 40;
 
         List<Integer> editable = new ArrayList<>();
         for (int i = 0; i < PLAYER_GUI_TO_SLOT.length; i++) {
@@ -73,6 +77,10 @@ public class InspectManager {
             OnlineInspectDataSource source = new OnlineInspectDataSource(onlineTarget, mode);
             source.refreshSnapshot(() -> Scheduler.runEntityTask(viewer, () -> {
                 if (!viewer.isOnline()) {
+                    return;
+                }
+                if (!source.isOnline()) {
+                    Notification.warn(viewer, "玩家 %s 已下线，无法打开检查界面", source.displayName());
                     return;
                 }
                 openSession(viewer, source);
@@ -104,21 +112,23 @@ public class InspectManager {
             event.setCancelled(true);
             return;
         }
-        if ("COLLECT_TO_CURSOR".equals(event.getAction().name())) {
+        if (event.getClickedInventory() != event.getView().getTopInventory()) {
+            if (isSupportedBottomAction(event.getAction().name())) {
+                trackCursorOrigin(session, event);
+                return;
+            }
             event.setCancelled(true);
             return;
         }
-
-        if (!session.editable(event.getRawSlot())) {
-            if (event.getClickedInventory() == event.getView().getTopInventory()) {
-                event.setCancelled(true);
-                return;
-            }
-            if (event.getAction().name().contains("MOVE_TO_OTHER_INVENTORY")) {
-                event.setCancelled(true);
-                return;
-            }
+        if (!isSupportedTopAction(event.getAction().name())) {
+            event.setCancelled(true);
+            return;
         }
+        if (!session.editable(event.getRawSlot())) {
+            event.setCancelled(true);
+            return;
+        }
+        trackCursorOrigin(session, event);
 
         session.markLocalEdit();
         if (event.getWhoClicked() instanceof Player viewer) {
@@ -141,7 +151,7 @@ public class InspectManager {
         }
 
         for (int rawSlot : event.getRawSlots()) {
-            if (!session.editable(rawSlot)) {
+            if (rawSlot >= event.getView().getTopInventory().getSize() || !session.editable(rawSlot)) {
                 event.setCancelled(true);
                 return;
             }
@@ -163,6 +173,7 @@ public class InspectManager {
             return;
         }
         if (!session.source().readOnly()) {
+            session.restoreCursorItem(viewer);
             session.applyTopToSource();
         }
         session.close();
@@ -187,14 +198,32 @@ public class InspectManager {
     static ItemStack createInfoItem(InspectDataSource source) {
         ItemStack item = new ItemStack(source.mode() == Mode.ENDER_CHEST ? Material.ENDER_CHEST : Material.CHEST);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName("检查目标信息");
-        List<String> lore = new ArrayList<>();
-        lore.add("目标: " + source.displayName());
-        lore.add("模式: " + (source.mode() == Mode.ENDER_CHEST ? "末影箱" : "背包"));
-        lore.add("状态: " + (source.isOnline() ? "在线" : "离线"));
-        meta.setLore(lore);
+        meta.displayName(Component.text("检查目标信息", NamedTextColor.GOLD));
+        List<Component> lore = new ArrayList<>();
+        lore.add(Component.text("目标: ", NamedTextColor.DARK_GRAY)
+                .append(Component.text(source.displayName(), NamedTextColor.YELLOW)));
+        lore.add(Component.text("容器: ", NamedTextColor.DARK_GRAY)
+                .append(Component.text(source.mode() == Mode.ENDER_CHEST ? "末影箱" : "背包", NamedTextColor.AQUA)));
+        lore.add(Component.text("状态: ", NamedTextColor.DARK_GRAY)
+                .append(Component.text(source.isOnline() ? "在线" : "离线",
+                        source.isOnline() ? NamedTextColor.GREEN : NamedTextColor.RED)));
+        lore.add(Component.text("权限: ", NamedTextColor.DARK_GRAY)
+                .append(Component.text(source.readOnly() ? "只读模式" : "读写模式",
+                        source.readOnly() ? NamedTextColor.RED : NamedTextColor.GREEN)));
+        meta.lore(lore);
         item.setItemMeta(meta);
         return item;
+    }
+
+    static Component createTitle(InspectDataSource source) {
+        TextComponent.Builder builder = Component.text();
+        builder.append(Component.text(source.displayName(), NamedTextColor.BLACK));
+        builder.append(Component.text("[", NamedTextColor.WHITE));
+        builder.append(Component.text(source.isOnline() ? "在线" : "离线",
+                source.isOnline() ? NamedTextColor.GREEN : NamedTextColor.RED));
+        builder.append(Component.text("]的" + (source.mode() == Mode.ENDER_CHEST ? "末影箱 " : "背包 "), NamedTextColor.WHITE));
+        builder.append(Component.text(source.readOnly() ? "[只读]" : "[读写]", NamedTextColor.DARK_GRAY));
+        return builder.build();
     }
 
     static String displayName(OfflinePlayer target) {
@@ -258,10 +287,71 @@ public class InspectManager {
             }
             if (session.source().isOnline()) {
                 session.source().refreshSnapshot(null);
-                if (!session.recentlyEdited()) {
+                if (!session.recentlyEdited() && isCursorClear(viewer)) {
                     Scheduler.runEntityTask(viewer, session::renderFromSource);
                 }
             }
         }
+    }
+
+    private static boolean isSupportedTopAction(String actionName) {
+        return switch (actionName) {
+            case "PICKUP_ALL", "PICKUP_HALF", "PICKUP_SOME", "PICKUP_ONE",
+                 "PLACE_ALL", "PLACE_SOME", "PLACE_ONE",
+                 "SWAP_WITH_CURSOR", "NOTHING" -> true;
+            default -> false;
+        };
+    }
+
+    private static boolean isSupportedBottomAction(String actionName) {
+        return switch (actionName) {
+            case "PICKUP_ALL", "PICKUP_HALF", "PICKUP_SOME", "PICKUP_ONE",
+                 "PLACE_ALL", "PLACE_SOME", "PLACE_ONE",
+                 "SWAP_WITH_CURSOR", "NOTHING" -> true;
+            default -> false;
+        };
+    }
+
+    private static boolean isCursorClear(Player viewer) {
+        ItemStack cursor = viewer.getItemOnCursor();
+        return cursor == null || cursor.getType().isAir();
+    }
+
+    private static void trackCursorOrigin(InspectSession session, InventoryClickEvent event) {
+        boolean topInventory = event.getClickedInventory() == event.getView().getTopInventory();
+        if (!topInventory) {
+            if (isPlacementAction(event.getAction().name())) {
+                session.clearCursorOriginSlot();
+                return;
+            }
+            if (isPickupLikeAction(event.getAction().name()) && normalize(event.getCurrentItem()) != null) {
+                session.setCursorOrigin(false, event.getSlot());
+            }
+            return;
+        }
+        if (!session.editable(event.getRawSlot())) {
+            return;
+        }
+        if (isPickupLikeAction(event.getAction().name()) && normalize(event.getCurrentItem()) != null) {
+            session.setCursorOrigin(true, event.getRawSlot());
+            return;
+        }
+        if (isPlacementAction(event.getAction().name())) {
+            session.clearCursorOriginSlot();
+        }
+    }
+
+    private static boolean isPickupLikeAction(String actionName) {
+        return switch (actionName) {
+            case "PICKUP_ALL", "PICKUP_HALF", "PICKUP_SOME", "PICKUP_ONE", "SWAP_WITH_CURSOR" -> true;
+            default -> false;
+        };
+    }
+
+    private static boolean isPlacementAction(String actionName) {
+        return switch (actionName) {
+            case "PLACE_ALL", "PLACE_SOME", "PLACE_ONE", "SWAP_WITH_CURSOR" -> true;
+            default -> false;
+        };
     }
 }

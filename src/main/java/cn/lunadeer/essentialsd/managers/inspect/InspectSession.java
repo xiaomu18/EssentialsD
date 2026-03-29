@@ -1,25 +1,29 @@
 package cn.lunadeer.essentialsd.managers.inspect;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.UUID;
 
 final class InspectSession {
+    private record CursorOrigin(boolean topInventory, int slot) {
+    }
+
     private final UUID viewerId;
     private final InspectDataSource source;
     private final InspectInventoryHolder holder;
     private final Inventory inventory;
     private volatile long lastLocalEditAt = 0L;
+    private volatile CursorOrigin cursorOrigin = null;
 
     InspectSession(UUID viewerId, InspectDataSource source) {
         this.viewerId = viewerId;
         this.source = source;
         this.holder = new InspectInventoryHolder();
         int size = source.mode() == InspectManager.Mode.ENDER_CHEST ? InspectManager.ENDER_SLOT_COUNT : InspectManager.PLAYER_GUI_SIZE;
-        String titlePrefix = source.mode() == InspectManager.Mode.ENDER_CHEST ? "检查末影箱: " : "检查背包: ";
-        this.inventory = Bukkit.createInventory(holder, size, titlePrefix + source.displayName());
+        this.inventory = Bukkit.createInventory(holder, size, InspectManager.createTitle(source));
         this.holder.setInventory(this.inventory);
     }
 
@@ -52,8 +56,16 @@ final class InspectSession {
         this.lastLocalEditAt = System.currentTimeMillis();
     }
 
+    void setCursorOrigin(boolean topInventory, int slot) {
+        this.cursorOrigin = new CursorOrigin(topInventory, slot);
+    }
+
+    void clearCursorOriginSlot() {
+        this.cursorOrigin = null;
+    }
+
     boolean recentlyEdited() {
-        return System.currentTimeMillis() - lastLocalEditAt < 250L;
+        return System.currentTimeMillis() - lastLocalEditAt < 1000L;
     }
 
     void renderFromSource() {
@@ -72,7 +84,7 @@ final class InspectSession {
                 inventory.setItem(i, InspectManager.FILLER.clone());
             }
         }
-        inventory.setItem(53, InspectManager.createInfoItem(source));
+        inventory.setItem(8, InspectManager.createInfoItem(source));
     }
 
     void applyTopToSource() {
@@ -96,7 +108,64 @@ final class InspectSession {
         source.applySnapshot(updated);
     }
 
+    void restoreCursorItem(Player viewer) {
+        CursorOrigin origin = this.cursorOrigin;
+        ItemStack cursor = InspectManager.normalize(viewer.getItemOnCursor());
+        if (cursor == null || origin == null) {
+            return;
+        }
+        ItemStack remaining = cursor.clone();
+        if (origin.topInventory()) {
+            if (editable(origin.slot())) {
+                remaining = restoreToSlot(inventory, origin.slot(), remaining);
+            }
+        } else {
+            remaining = restoreToSlot(viewer.getInventory(), origin.slot(), remaining);
+        }
+        if (remaining != null) {
+            remaining = returnToViewer(viewer, remaining);
+        }
+        viewer.setItemOnCursor(null);
+        clearCursorOriginSlot();
+        if (remaining != null) {
+            viewer.getWorld().dropItemNaturally(viewer.getLocation(), remaining);
+        }
+    }
+
     void close() {
+        clearCursorOriginSlot();
         source.close();
+    }
+
+    private static ItemStack restoreToSlot(Inventory targetInventory, int slot, ItemStack item) {
+        ItemStack target = InspectManager.normalize(targetInventory.getItem(slot));
+        if (target == null) {
+            targetInventory.setItem(slot, item);
+            return null;
+        }
+        if (!target.isSimilar(item)) {
+            return item;
+        }
+        int maxStack = Math.min(target.getMaxStackSize(), targetInventory.getMaxStackSize());
+        int space = Math.max(0, maxStack - target.getAmount());
+        if (space == 0) {
+            return item;
+        }
+        int merged = Math.min(space, item.getAmount());
+        target.setAmount(target.getAmount() + merged);
+        targetInventory.setItem(slot, target);
+        if (merged >= item.getAmount()) {
+            return null;
+        }
+        ItemStack remaining = item.clone();
+        remaining.setAmount(item.getAmount() - merged);
+        return remaining;
+    }
+
+    private static ItemStack returnToViewer(Player viewer, ItemStack item) {
+        for (ItemStack overflow : viewer.getInventory().addItem(item).values()) {
+            return InspectManager.normalize(overflow);
+        }
+        return null;
     }
 }
