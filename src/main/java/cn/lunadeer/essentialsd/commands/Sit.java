@@ -15,19 +15,19 @@ public class Sit implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
-            Notification.error(sender, "Only players can use this command.");
+            Notification.error(sender, "只有玩家可以使用此命令。");
             return true;
         }
         if (!EssentialsD.config.getChairEnable()) {
-            Notification.warn(player, "Sit is currently disabled.");
+            Notification.warn(player, "坐下功能当前已禁用。");
             return true;
         }
         if (!player.isOnGround()) {
-            Notification.warn(player, "You must stand on the ground before sitting.");
+            Notification.warn(player, "你必须站在地面上才能坐下。");
             return true;
         }
         if (player.getLocation().getBlock().isLiquid() || player.getLocation().subtract(0.0, 0.1, 0.0).getBlock().isEmpty()) {
-            Notification.warn(player, "You cannot sit at this location.");
+            Notification.warn(player, "你无法在此处坐下。");
             return true;
         }
 
@@ -35,10 +35,10 @@ public class Sit implements CommandExecutor {
             Location seatLocation = player.getLocation().clone().add(0.0, EssentialsD.config.getChairSitHeight(), 0.0);
             seatLocation.setPitch(0.0F);
             if (!SeatManager.sit(player, seatLocation)) {
-                Notification.warn(player, "You cannot sit right now.");
+                Notification.warn(player, "你现在无法坐下。");
                 return;
             }
-            Notification.info(player, "You sit down.");
+            Notification.info(player, "你坐下了。");
         });
         return true;
     }

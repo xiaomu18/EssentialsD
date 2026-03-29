@@ -29,6 +29,7 @@ permissions:
       essd.enderchest: true
       essd.tp.tpa: true
       essd.tp.tpahere: true
+      essd.tp.tpacancel: true
       essd.tp.rtp: true
       essd.tp.back: true
       essd.inspect: true
@@ -74,6 +75,8 @@ permissions:
   essd.tp.tpa:
     default: true
   essd.tp.tpahere:
+    default: true
+  essd.tp.tpacancel:
     default: true
   essd.tp.rtp:
     default: true
@@ -165,6 +168,10 @@ commands:
     description: Request another player teleport to you
     usage: /tpahere <player>
     permission: essd.tp.tpahere
+  tpacancel:
+    description: Cancel all teleport requests initiated by you
+    usage: /tpacancel
+    permission: essd.tp.tpacancel
   rtp:
     description: Random teleport nearby
     usage: /rtp

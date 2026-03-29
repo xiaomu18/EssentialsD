@@ -31,21 +31,21 @@ public class TeleportManager {
 
     private boolean tpReqCheck(Player initiator, Player target) {
         if (initiator == target) {
-            Notification.warn(initiator, "传送到自己是不明智的");
+            Notification.warn(initiator, "传送到自己是不明智的哦。");
             return false;
         }
         if (!target.isOnline()) {
-            Notification.error(initiator, "玩家 %s 不在线", target.getName());
+            Notification.error(initiator, "目标玩家 %s 不在线哦。", target.getName());
             return false;
         }
         if (EssentialsD.config.getTpWorldBlackList().contains(target.getWorld().getName())) {
-            Notification.error(initiator, "目的地所在世界 %s 不允许传送", target.getWorld().getName());
+            Notification.error(initiator, "目的地所在世界 %s 不允许传送哦。", target.getWorld().getName());
             return false;
         }
 
         for (TpTask task : tasks.values()) {
-            if (task.initiator == initiator && task.target == target) {
-                Notification.error(initiator, "你现在无法发送传送请求，因为你已经向玩家 %s 发送过一次请求且还未过期", target.getName());
+            if (task.initiator == initiator && !task.tpahere) {
+                Notification.warn(initiator, "你现在无法发送传送请求，因为当前有一个传送请求还未过期。", target.getName());
                 return false;
             }
         }
@@ -95,6 +95,29 @@ public class TeleportManager {
         Notification.info(target, Component.text().append(Component.text("| ", MAIN_COLOR)).append(acceptBtn).append(Component.text("  ", MAIN_COLOR)).append(denyBtn).build());
         Notification.info(target, Component.text("                            ", Style.style(MAIN_COLOR, TextDecoration.STRIKETHROUGH)));
         Scheduler.runTaskLater(() -> tasks.remove(task.taskId), 20L * EssentialsD.config.getTpTpaExpire());
+    }
+
+    public void cancelRequests(Player initiator) {
+        int cancelled = 0;
+        for (TpTask task : tasks.values()) {
+            if (!task.initiator.getUniqueId().equals(initiator.getUniqueId())) {
+                continue;
+            }
+
+            if (tasks.remove(task.taskId, task)) {
+                cancelled++;
+                if (task.target.isOnline()) {
+                    Notification.warn(task.target, "来自 %s 的传送请求已被取消", initiator.getName());
+                }
+            }
+        }
+
+        if (cancelled == 0) {
+            Notification.warn(initiator, "你当前没有可取消的传送请求");
+            return;
+        }
+
+        Notification.info(initiator, "已取消 %d 个你发起的传送请求", cancelled);
     }
 
     public void deny(Player player, UUID taskId) {

@@ -5,6 +5,7 @@ import cn.lunadeer.essentialsd.commands.home.*;
 import cn.lunadeer.essentialsd.commands.tp.Back;
 import cn.lunadeer.essentialsd.commands.tp.Rtp;
 import cn.lunadeer.essentialsd.commands.tp.Tpa;
+import cn.lunadeer.essentialsd.commands.tp.TpaCancel;
 import cn.lunadeer.essentialsd.commands.tp.TpaHere;
 import cn.lunadeer.essentialsd.commands.warp.DelWarp;
 import cn.lunadeer.essentialsd.commands.warp.SetWarp;
@@ -77,6 +78,7 @@ public final class EssentialsD extends JavaPlugin {
         commands.put("sit", new Sit());
         commands.put("tpa", new Tpa());
         commands.put("tpahere", new TpaHere());
+        commands.put("tpacancel", new TpaCancel());
         commands.put("rtp", new Rtp());
         commands.put("back", new Back());
         commands.put("home", new Home());
