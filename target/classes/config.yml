@@ -60,10 +60,15 @@ HomeLimit:
   WorldBlackList: [ ]   # 不允许设置 home 的世界
 
 # 聊天功能 (需要安装 PlaceholderAPI)
-chat-func:
+chat:
   Enable: false
   # 聊天格式，可以使用 minimessage 格式
-  ChatFormat: '<%player_name%> $player_message$'
+  # 若要使用原生颜色代码必须使用 § 而不是 &
+  format:
+    - text: '[§c管理员§r] '
+      permission: "minecraft.command.op"
+    - text: '<%player_name%> $player_message$'
+
   cooldown: 2000 # 毫秒 (1s=1000ms)
   forbid-keywords:
     - "傻逼"

@@ -1,7 +1,7 @@
 name: EssentialsD
-version: '2.3.7'
+version: "2.3.7"
 main: cn.lunadeer.essentialsd.EssentialsD
-api-version: '1.21'
+api-version: "1.21"
 description: Deer's Essentials Redesigned
 authors: ["lunadeer", "xiaomu18"]
 load: STARTUP
@@ -15,7 +15,40 @@ softdepend:
 permissions:
   essd.*:
     default: op
-    description: 允许使用 EssentialsD 的所有功能
+    children:
+      essd.suicide: true
+      essd.hat: true
+      essd.showitem: true
+      essd.skull: true
+      essd.god: true
+      essd.fly: true
+      essd.fly.other: true
+      essd.sit: true
+      essd.save: true
+      essd.more: true
+      essd.enderchest: true
+      essd.tp.tpa: true
+      essd.tp.tpahere: true
+      essd.tp.rtp: true
+      essd.tp.back: true
+      essd.inspect: true
+      essd.home: true
+      essd.home.use-editor: true
+      essd.setwarp: true
+      essd.delwarp: true
+      essd.warp: true
+      essd.mute: true
+      essd.unmute: true
+      essd.kickall: true
+      essd.vanish: true
+      essd.control: true
+      essd.heal: true
+      essd.gamemode: true
+      essd.gamemode.other: true
+      essd.gamemode.survival: true
+      essd.gamemode.creative: true
+      essd.gamemode.adventure: true
+      essd.gamemode.spectator: true
   essd.suicide:
     default: true
   essd.hat:
@@ -28,25 +61,30 @@ permissions:
     default: op
   essd.fly:
     default: op
-    children:
-      essd.fly.other: false
+  essd.fly.other:
+    default: false
+  essd.sit:
+    default: true
   essd.save:
     default: op
   essd.more:
     default: op
   essd.enderchest:
     default: true
-  essd.tp.*:
+  essd.tp.tpa:
     default: true
-    children:
-      essd.tp.tpa: true
-      essd.tp.tpahere: true
-      essd.tp.rtp: true
-      essd.tp.back: true
+  essd.tp.tpahere:
+    default: true
+  essd.tp.rtp:
+    default: true
+  essd.tp.back:
+    default: true
   essd.inspect:
     default: op
   essd.home:
     default: true
+  essd.home.use-editor:
+    default: op
   essd.setwarp:
     default: op
   essd.delwarp:
@@ -55,156 +93,155 @@ permissions:
     default: true
   essd.mute:
     default: op
-
+  essd.unmute:
+    default: op
+  essd.kickall:
+    default: op
+  essd.vanish:
+    default: op
+  essd.control:
+    default: op
+  essd.heal:
+    default: op
+  essd.gamemode:
+    default: op
+  essd.gamemode.other:
+    default: false
+  essd.gamemode.survival:
+    default: false
+  essd.gamemode.creative:
+    default: false
+  essd.gamemode.adventure:
+    default: false
+  essd.gamemode.spectator:
+    default: false
 
 commands:
   suicide:
-    description: 自杀
+    description: Kill yourself
     usage: /suicide
     permission: essd.suicide
-    permission-message: 你不被允许自杀，快说“谢谢管理员”。
   hat:
-    description: 将主手持的物品放在头部
+    description: Put the item in your main hand on your head
     usage: /hat
     permission: essd.hat
-    permission-message: 管理员不允许你随便在头上放东西（没权限）。
-  showItem:
-    description: 展示主手持的物品
+  showitem:
+    description: Show the item in your main hand
     usage: /showitem
     permission: essd.showitem
-    permission-message: 不要什么都想拿出来啊喂！（没权限）
   skull:
-    description: 使用任意头颅交换获得一个自己的头颅
+    description: Get your player head
     usage: /skull
     permission: essd.skull
-    permission-message: 禁止献祭（没权限）。
   god:
-    description: 无敌模式
+    description: Toggle god mode
     usage: /god [player]
     permission: essd.god
-    permission-message: 禁止成仙（没权限）。
   fly:
-    description: 飞行模式
+    description: Toggle flight
     usage: /fly [player]
     permission: essd.fly
-    permission-message: 禁止起飞（没权限）。
+  sit:
+    description: Sit down in place
+    usage: /sit
+    permission: essd.sit
   save:
-    description: 保存
+    description: Save the server
     usage: /save
     permission: essd.save
-    permission-message: 保存失败（没权限）。
   more:
-    description: 获取更多手持物品
+    description: Fill the held item stack
     usage: /more [amount]
     permission: essd.more
-    permission-message: more不出来了（没权限）。
   enderchest:
-    description: 通过指令打开末影箱
+    description: Open your ender chest
     usage: /enderchest
     permission: essd.enderchest
-    permission-message: 你没有权限快速打开末影箱。
   tpa:
-    description: 发起传送请求
+    description: Request teleport to another player
     usage: /tpa <player>
     permission: essd.tp.tpa
-    permission-message: 你没有权限发起传送请求。
   tpahere:
-    description: 发起传送到自己的请求
+    description: Request another player teleport to you
     usage: /tpahere <player>
     permission: essd.tp.tpahere
-    permission-message: 你没有权限发起传送请求。
   rtp:
-    description: 随机传送到附近
+    description: Random teleport nearby
     usage: /rtp
     permission: essd.tp.rtp
-    permission-message: 你没有权限随机传送。
   back:
-    description: 回到上一个传送点
+    description: Return to your previous teleport location
     usage: /back
     permission: essd.tp.back
-    permission-message: 你没有权限回到上一个传送点。
   inspect:
-    description: 检查玩家背包
+    description: Inspect a player's inventory
     usage: /inspect <player>
     permission: essd.inspect
-    permission-message: 禁止偷窥（没权限）。
   inspect-ender:
-    description: 检查玩家背包
+    description: Inspect a player's ender chest
     usage: /inspect-ender <player>
     permission: essd.inspect
-    permission-message: 禁止偷窥（没权限）。
   home:
-    description: 回家
-    usage: /home [名称]
+    description: Teleport to a home
+    usage: /home [name]
     permission: essd.home
-    permission-message: 你没有权限使用home。
   homes:
-    description: 查看家列表
-    usage: /homes
+    description: Show your home list
+    usage: /homes [page]
     permission: essd.home
-    permission-message: 你没有权限使用home。
   sethome:
-    description: 设置家
-    usage: /sethome [名称]
+    description: Set a home
+    usage: /sethome [name]
     permission: essd.home
-    permission-message: 你没有权限使用home。
   delhome:
-    description: 删除家
-    usage: /delhome <名称>
+    description: Delete a home
+    usage: /delhome <name>
     permission: essd.home
-    permission-message: 你没有权限使用home。
   setwarp:
-    description: 设置传送点
-    usage: /setwarp <名称>
+    description: Set a warp point
+    usage: /setwarp <name>
     permission: essd.setwarp
-    permission-message: 你没有权限设置传送点。
   delwarp:
-    description: 删除传送点
-    usage: /delwarp <名称>
+    description: Delete a warp point
+    usage: /delwarp <name>
     permission: essd.delwarp
-    permission-message: 你没有权限删除传送点。
   warp:
-    description: 传送到传送点
-    usage: /warp <名称>
+    description: Teleport to a warp point
+    usage: /warp <name>
     permission: essd.warp
-    permission-message: 你没有权限传送到传送点。
   warps:
-    description: 查看传送点列表
-    usage: /warps
+    description: Show the warp list
+    usage: /warps [page]
     permission: essd.warp
-    permission-message: 你没有权限查看传送点列表。
   mute:
-    description: 禁言玩家
+    description: Mute a player
     usage: /mute
     permission: essd.mute
-    permission-message: 你没有权限使用此命令。
-  kickall:
-    description: 以特定理由清空服务器
-    usage: /kickall <reason>
-    permission: essd.kickall
-    permission-message: 你没有权限使用此命令。
-  vanish:
-    description: 在服务器完全隐身
-    usage: /vanish [on/off]
-    permission: essd.vanish
-    permission-message: 你没有权限使用此命令。
-  essd:
-    description: The Control Of EssentialsD
-    usage: /essd reload
-    permission: essd.control
-    permission-message: 你没有权限使用此命令。
   unmute:
-    description: 取消禁言
+    description: Unmute a player or IP
     usage: /unmute p [player] or /unmute ip [player/address]
     permission: essd.unmute
-    permission-message: 你没有权限使用此命令。
+  kickall:
+    description: Kick all players with a reason
+    usage: /kickall <reason>
+    permission: essd.kickall
+  vanish:
+    description: Toggle vanish mode
+    usage: /vanish [on/off]
+    permission: essd.vanish
+  gamemode:
+    description: Set a player's game mode
+    usage: /gamemode <survival|creative|adventure|spectator> [player]
+    permission: essd.gamemode
+  essd:
+    description: EssentialsD control command
+    usage: /essd reload
+    permission: essd.control
   heal:
-    description: 治愈指定玩家
-    usage: /heal [玩家名]
+    description: Heal a player
+    usage: /heal [player]
     permission: essd.heal
-    permission-message: 你没有权限使用此命令。
   home-editor:
-    description: 管理和查看其他玩家的家
+    description: Manage another player's homes
     usage: /home-editor <playerName> view/tp/remove (homeName)
     permission: essd.home.use-editor
-    permission-message: 你没有权限使用此命令。

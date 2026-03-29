@@ -1,7 +1,7 @@
 package cn.lunadeer.essentialsd.events;
 
 import cn.lunadeer.essentialsd.EssentialsD;
-import cn.lunadeer.minecraftpluginutils.Notification;
+import cn.lunadeer.utils.Notification;
 import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

@@ -7,8 +7,8 @@ import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 public class Warps implements CommandExecutor {
-   public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
-      WarpList.show(commandSender, strings);
-      return true;
-   }
+    public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
+        WarpList.show(commandSender, strings);
+        return true;
+    }
 }

@@ -7,6 +7,12 @@
     <!-- 项目的唯一ID，一个groupId下面可能多个项目，就是靠artifactId来区分的 -->
     <artifactId>EssentialsD</artifactId>
 
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
     <repositories>
         <!-- This adds the Spigot Maven repository to the build -->
         <repository>

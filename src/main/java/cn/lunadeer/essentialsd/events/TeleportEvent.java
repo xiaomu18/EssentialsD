@@ -8,11 +8,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 
 public class TeleportEvent implements Listener {
-   @EventHandler(
-      priority = EventPriority.HIGHEST
-   )
-   public void onPlayerDeath(PlayerDeathEvent event) {
-      Player player = event.getEntity();
-      EssentialsD.tpManager.updateLastTpLocation(player);
-   }
+    @EventHandler(
+            priority = EventPriority.HIGHEST
+    )
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        Player player = event.getEntity();
+        EssentialsD.tpManager.updateLastTpLocation(player);
+    }
 }

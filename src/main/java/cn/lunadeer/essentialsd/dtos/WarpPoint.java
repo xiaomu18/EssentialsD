@@ -2,266 +2,273 @@ package cn.lunadeer.essentialsd.dtos;
 
 import cn.lunadeer.essentialsd.EssentialsD;
 import cn.lunadeer.essentialsd.utils.LocUtil;
+import org.bukkit.Location;
+
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
-import org.bukkit.Location;
 
 public class WarpPoint {
-   private Integer id;
-   private final String name;
-   private final Location location;
+    private Integer id;
+    private final String name;
+    private final Location location;
 
-   public WarpPoint(Integer id, String name, Location location) {
-      this.id = id;
-      this.name = name;
-      this.location = location;
-   }
+    public WarpPoint(Integer id, String name, Location location) {
+        this.id = id;
+        this.name = name;
+        this.location = location;
+    }
 
-   public WarpPoint(String name, Location location) {
-      this.name = name;
-      this.location = location;
-   }
+    public WarpPoint(String name, Location location) {
+        this.name = name;
+        this.location = location;
+    }
 
-   public Integer getId() {
-      return this.id;
-   }
+    public Integer getId() {
+        return this.id;
+    }
 
-   public String getName() {
-      return this.name;
-   }
+    public String getName() {
+        return this.name;
+    }
 
-   public Location getLocation() {
-      return this.location;
-   }
+    public Location getLocation() {
+        return this.location;
+    }
 
-   public static void insert(WarpPoint point) {
-      String sql = "INSERT INTO warp_point (warp_name, location) VALUES (?, ?);";
+    public static void insert(WarpPoint point) {
+        String sql = "INSERT INTO warp_point (warp_name, location) VALUES (?, ?);";
 
-      try {
-         ResultSet rs = EssentialsD.database.query(sql, point.getName(), LocUtil.toString(point.getLocation()));
+        try {
+            ResultSet rs = EssentialsD.database.query(sql, point.getName(), LocUtil.toString(point.getLocation()));
 
-         label51: {
-            try {
-               if (rs == null) {
-                  break label51;
-               }
-            } catch (Throwable var6) {
-               if (rs != null) {
-                  try {
-                     rs.close();
-                  } catch (Throwable var5) {
-                     var6.addSuppressed(var5);
-                  }
-               }
+            label51:
+            {
+                try {
+                    if (rs == null) {
+                        break label51;
+                    }
+                } catch (Throwable var6) {
+                    if (rs != null) {
+                        try {
+                            rs.close();
+                        } catch (Throwable var5) {
+                            var6.addSuppressed(var5);
+                        }
+                    }
 
-               throw var6;
+                    throw var6;
+                }
+
+                if (rs != null) {
+                    rs.close();
+                }
+
+                return;
             }
 
             if (rs != null) {
-               rs.close();
+                rs.close();
             }
 
-            return;
-         }
+        } catch (Exception e) {
+            EssentialsD.database.handleDatabaseError("插入传送点失败", e, sql);
+        }
+    }
 
-         if (rs != null) {
-            rs.close();
-         }
+    public static void delete(WarpPoint point) {
+        String sql = "DELETE FROM warp_point WHERE warp_name = ?;";
 
-      } catch (Exception e) {
-         EssentialsD.database.handleDatabaseError("插入传送点失败", e, sql);
-      }
-   }
+        try {
+            ResultSet rs = EssentialsD.database.query(sql, point.getName());
 
-   public static void delete(WarpPoint point) {
-      String sql = "DELETE FROM warp_point WHERE warp_name = ?;";
+            label51:
+            {
+                try {
+                    if (rs == null) {
+                        break label51;
+                    }
+                } catch (Throwable var6) {
+                    if (rs != null) {
+                        try {
+                            rs.close();
+                        } catch (Throwable var5) {
+                            var6.addSuppressed(var5);
+                        }
+                    }
 
-      try {
-         ResultSet rs = EssentialsD.database.query(sql, point.getName());
+                    throw var6;
+                }
 
-         label51: {
-            try {
-               if (rs == null) {
-                  break label51;
-               }
-            } catch (Throwable var6) {
-               if (rs != null) {
-                  try {
-                     rs.close();
-                  } catch (Throwable var5) {
-                     var6.addSuppressed(var5);
-                  }
-               }
+                if (rs != null) {
+                    rs.close();
+                }
 
-               throw var6;
+                return;
             }
 
             if (rs != null) {
-               rs.close();
+                rs.close();
             }
 
-            return;
-         }
+        } catch (Exception e) {
+            EssentialsD.database.handleDatabaseError("删除传送点失败", e, sql);
+        }
+    }
 
-         if (rs != null) {
-            rs.close();
-         }
+    public static WarpPoint selectByName(String name) {
+        String sql = "SELECT * FROM warp_point WHERE warp_name = ?;";
 
-      } catch (Exception e) {
-         EssentialsD.database.handleDatabaseError("删除传送点失败", e, sql);
-      }
-   }
+        try {
+            ResultSet rs = EssentialsD.database.query(sql, name);
 
-   public static WarpPoint selectByName(String name) {
-      String sql = "SELECT * FROM warp_point WHERE warp_name = ?;";
+            WarpPoint var8;
+            label60:
+            {
+                label61:
+                {
+                    try {
+                        if (rs == null) {
+                            var8 = null;
+                            break label60;
+                        }
 
-      try {
-         ResultSet rs = EssentialsD.database.query(sql, name);
+                        if (rs.next()) {
+                            var8 = new WarpPoint(rs.getInt("id"), rs.getString("warp_name"), LocUtil.fromString(rs.getString("location")));
+                            break label61;
+                        }
+                    } catch (Throwable var6) {
+                        if (rs != null) {
+                            try {
+                                rs.close();
+                            } catch (Throwable var5) {
+                                var6.addSuppressed(var5);
+                            }
+                        }
 
-         WarpPoint var8;
-         label60: {
-            label61: {
-               try {
-                  if (rs == null) {
-                     var8 = null;
-                     break label60;
-                  }
+                        throw var6;
+                    }
 
-                  if (rs.next()) {
-                     var8 = new WarpPoint(rs.getInt("id"), rs.getString("warp_name"), LocUtil.fromString(rs.getString("location")));
-                     break label61;
-                  }
-               } catch (Throwable var6) {
-                  if (rs != null) {
-                     try {
+                    if (rs != null) {
                         rs.close();
-                     } catch (Throwable var5) {
-                        var6.addSuppressed(var5);
-                     }
-                  }
+                    }
 
-                  throw var6;
-               }
+                    return null;
+                }
 
-               if (rs != null) {
-                  rs.close();
-               }
+                if (rs != null) {
+                    rs.close();
+                }
 
-               return null;
+                return var8;
             }
 
             if (rs != null) {
-               rs.close();
+                rs.close();
             }
 
             return var8;
-         }
+        } catch (Exception e) {
+            EssentialsD.database.handleDatabaseError("查询传送点失败", e, sql);
+            return null;
+        }
+    }
 
-         if (rs != null) {
-            rs.close();
-         }
+    public static List selectAllNames() {
+        List<String> names = new ArrayList();
+        String sql = "SELECT DISTINCT warp_name FROM warp_point;";
 
-         return var8;
-      } catch (Exception e) {
-         EssentialsD.database.handleDatabaseError("查询传送点失败", e, sql);
-         return null;
-      }
-   }
+        try {
+            ResultSet rs = EssentialsD.database.query(sql);
 
-   public static List selectAllNames() {
-      List<String> names = new ArrayList();
-      String sql = "SELECT DISTINCT warp_name FROM warp_point;";
+            Object var3;
+            label53:
+            {
+                try {
+                    if (rs == null) {
+                        var3 = names;
+                        break label53;
+                    }
 
-      try {
-         ResultSet rs = EssentialsD.database.query(sql);
+                    while (rs.next()) {
+                        names.add(rs.getString("warp_name"));
+                    }
+                } catch (Throwable var6) {
+                    if (rs != null) {
+                        try {
+                            rs.close();
+                        } catch (Throwable var5) {
+                            var6.addSuppressed(var5);
+                        }
+                    }
 
-         Object var3;
-         label53: {
-            try {
-               if (rs == null) {
-                  var3 = names;
-                  break label53;
-               }
+                    throw var6;
+                }
 
-               while(rs.next()) {
-                  names.add(rs.getString("warp_name"));
-               }
-            } catch (Throwable var6) {
-               if (rs != null) {
-                  try {
-                     rs.close();
-                  } catch (Throwable var5) {
-                     var6.addSuppressed(var5);
-                  }
-               }
+                if (rs != null) {
+                    rs.close();
+                }
 
-               throw var6;
+                return names;
             }
 
             if (rs != null) {
-               rs.close();
+                rs.close();
             }
 
+            return (List) var3;
+        } catch (Exception e) {
+            EssentialsD.database.handleDatabaseError("查询传送点名字失败", e, sql);
             return names;
-         }
+        }
+    }
 
-         if (rs != null) {
-            rs.close();
-         }
+    public static List<WarpPoint> selectAll() {
+        List<WarpPoint> points = new ArrayList<>();
+        String sql = "SELECT * FROM warp_point;";
 
-         return (List)var3;
-      } catch (Exception e) {
-         EssentialsD.database.handleDatabaseError("查询传送点名字失败", e, sql);
-         return names;
-      }
-   }
+        try {
+            ResultSet rs = EssentialsD.database.query(sql);
 
-   public static List selectAll() {
-      List<WarpPoint> points = new ArrayList();
-      String sql = "SELECT * FROM warp_point;";
+            Object var3;
+            label53:
+            {
+                try {
+                    if (rs == null) {
+                        var3 = points;
+                        break label53;
+                    }
 
-      try {
-         ResultSet rs = EssentialsD.database.query(sql);
+                    while (rs.next()) {
+                        points.add(new WarpPoint(rs.getInt("id"), rs.getString("warp_name"), LocUtil.fromString(rs.getString("location"))));
+                    }
+                } catch (Throwable var6) {
+                    if (rs != null) {
+                        try {
+                            rs.close();
+                        } catch (Throwable var5) {
+                            var6.addSuppressed(var5);
+                        }
+                    }
 
-         Object var3;
-         label53: {
-            try {
-               if (rs == null) {
-                  var3 = points;
-                  break label53;
-               }
+                    throw var6;
+                }
 
-               while(rs.next()) {
-                  points.add(new WarpPoint(rs.getInt("id"), rs.getString("warp_name"), LocUtil.fromString(rs.getString("location"))));
-               }
-            } catch (Throwable var6) {
-               if (rs != null) {
-                  try {
-                     rs.close();
-                  } catch (Throwable var5) {
-                     var6.addSuppressed(var5);
-                  }
-               }
+                if (rs != null) {
+                    rs.close();
+                }
 
-               throw var6;
+                return points;
             }
 
             if (rs != null) {
-               rs.close();
+                rs.close();
             }
 
+            return (List) var3;
+        } catch (Exception e) {
+            EssentialsD.database.handleDatabaseError("查询传送点失败", e, sql);
             return points;
-         }
-
-         if (rs != null) {
-            rs.close();
-         }
-
-         return (List)var3;
-      } catch (Exception e) {
-         EssentialsD.database.handleDatabaseError("查询传送点失败", e, sql);
-         return points;
-      }
-   }
+        }
+    }
 }
