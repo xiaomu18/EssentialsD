@@ -11,14 +11,22 @@ public class Control implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 0) {
-            Notification.info(sender, "用法: /essd reload");
+            Notification.info(sender, "用法: /essd <reload|version>");
             return true;
         }
         if ("reload".equalsIgnoreCase(args[0])) {
             EssentialsD.config.reload();
             EssentialsD.muteManager.reload();
             Notification.info(sender, "已重新读取配置文件");
+            return true;
         }
+        if ("version".equalsIgnoreCase(args[0])) {
+            Notification.info(sender, "插件版本: %s", EssentialsD.instance.getPluginMeta().getVersion());
+            Notification.info(sender, "编译日期: %s", EssentialsD.instance.getBuildDate());
+            Notification.info(sender, "项目地址: %s", EssentialsD.instance.getProjectUrl());
+            return true;
+        }
+        Notification.error(sender, "用法: /essd <reload|version>");
         return true;
     }
 }

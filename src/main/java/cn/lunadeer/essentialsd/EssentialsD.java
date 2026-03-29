@@ -27,8 +27,11 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 public final class EssentialsD extends JavaPlugin {
     public static EssentialsD instance;
@@ -37,10 +40,13 @@ public final class EssentialsD extends JavaPlugin {
     public static DatabaseManager database;
     public static MuteManager muteManager;
     public static Map<String, CommandExecutor> commands = new HashMap<>();
+    private String buildDate = "未知";
+    private String projectUrl = "https://github.com/xiaomu18/EssentialsD";
 
     public void onEnable() {
         instance = this;
         new XLogger(instance);
+        loadBuildInfo();
         config = new ConfigManager(instance);
         new Notification(instance);
         database = new DatabaseManager(this, DatabaseManager.TYPE.valueOf(config.getDbType().toUpperCase()), config.getDbHost(), config.getDbPort(), config.getDbName(), config.getDbUser(), config.getDbPass());
@@ -124,8 +130,6 @@ public final class EssentialsD extends JavaPlugin {
         if (config.getRecipesLightBlock()) {
             this.getServer().addRecipe(LightBlock.getRecipe());
         }
-
-        config.ApplyForceLoadChunks();
         XLogger.info("EssentialsD 已加载");
         XLogger.info("版本: " + this.getPluginMeta().getVersion() + " Redesigned");
         XLogger.info("  ______                    _   _       _     _____");
@@ -138,5 +142,32 @@ public final class EssentialsD extends JavaPlugin {
     }
 
     public void onDisable() {
+    }
+
+    public String getBuildDate() {
+        return buildDate;
+    }
+
+    public String getProjectUrl() {
+        return projectUrl;
+    }
+
+    private void loadBuildInfo() {
+        try (InputStream input = this.getResource("build-info.properties")) {
+            if (input == null) {
+                return;
+            }
+            Properties properties = new Properties();
+            properties.load(input);
+            String buildDate = properties.getProperty("build.date");
+            if (buildDate != null && !buildDate.isBlank() && !buildDate.contains("${")) {
+                this.buildDate = buildDate;
+            }
+            String projectUrl = properties.getProperty("project.url");
+            if (projectUrl != null && !projectUrl.isBlank()) {
+                this.projectUrl = projectUrl;
+            }
+        } catch (IOException ignored) {
+        }
     }
 }

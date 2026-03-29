@@ -22,16 +22,6 @@ CombineExpOrbs:
 # 经验吸收无冷却
 NoExpCoolDown: false
 
-# 强加载区块列表
-ForceLoadChunks: [ ]
-#  - world:0:0
-#  - world_the_end:-12:12
-
-# 区块操作延迟（强加载清理、设置） 秒
-# 过低可能导致世界未加载完成时触发操作引起报错
-# -1 为禁用强加载区块操作
-ChunkOperateDelay: 10
-
 # 扩展合成表
 Recipes:
   CrowBar: true                 # 撬棍

@@ -2,11 +2,8 @@ package cn.lunadeer.essentialsd.managers;
 
 import cn.lunadeer.essentialsd.EssentialsD;
 import cn.lunadeer.essentialsd.utils.MuteDuration;
-import cn.lunadeer.utils.Scheduler;
 import cn.lunadeer.utils.XLogger;
-import org.bukkit.Chunk;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
@@ -24,8 +21,6 @@ public class ConfigManager {
     private Boolean _combine_exp_orbs_enable;
     private Float _combine_exp_orbs_radius;
     private Boolean _no_exp_cool_down;
-    private List<String> _force_load_chunks;
-    private Integer _chunk_operate_delay;
     private Integer _tp_tpa_expire;
     private Integer _tp_delay;
     private Integer _tp_cool_down;
@@ -84,8 +79,6 @@ public class ConfigManager {
         this._combine_exp_orbs_enable = this._file.getBoolean("CombineExpOrbs.Enable", false);
         this._combine_exp_orbs_radius = (float) this._file.getDouble("CombineExpOrbs.Radius", 1.5F);
         this._no_exp_cool_down = this._file.getBoolean("NoExpCoolDown", false);
-        this._force_load_chunks = this._file.getStringList("ForceLoadChunks");
-        this._chunk_operate_delay = this._file.getInt("ChunkOperateDelay", 10);
         this._tp_delay = this._file.getInt("Teleport.Delay", 0);
         this._tp_cool_down = this._file.getInt("Teleport.CoolDown", 0);
         this._tp_tpa_expire = this._file.getInt("Teleport.TpaExpire", 30);
@@ -277,17 +270,6 @@ public class ConfigManager {
         }
 
     }
-
-    public Integer getChunkOperateDelay() {
-        return this._chunk_operate_delay;
-    }
-
-    public void setChunkOperateDelay(Integer delay) {
-        this._chunk_operate_delay = delay;
-        this._file.set("ChunkOperateDelay", delay);
-        this._plugin.saveConfig();
-    }
-
     public Integer getTpDelay() {
         return this._tp_delay;
     }
@@ -338,46 +320,6 @@ public class ConfigManager {
 
     public Boolean getRecipesStackedEnchantBook() {
         return this._recipes_stacked_enchant_book;
-    }
-
-    public void ApplyForceLoadChunks() {
-        if (this._chunk_operate_delay < 0) {
-            XLogger.info("加载区块操作已禁用");
-        } else {
-            Scheduler.runTaskLater(() -> {
-                int count = 0;
-
-                for (World world : EssentialsD.instance.getServer().getWorlds()) {
-                    XLogger.debug("清除所有强加载区块: " + world.getName());
-
-                    for (Chunk chunk : world.getForceLoadedChunks()) {
-                        ++count;
-                        world.setChunkForceLoaded(chunk.getX(), chunk.getZ(), false);
-                    }
-                }
-
-                XLogger.info("清除所有强加载区块: " + count);
-
-                for (String s : this._force_load_chunks) {
-                    String[] split = s.split(":");
-                    if (split.length != 3) {
-                        XLogger.warn("ForceLoadChunks 配置错误: " + s);
-                    } else {
-                        String world_name = split[0];
-                        int x = Integer.parseInt(split[1]);
-                        int z = Integer.parseInt(split[2]);
-                        World world = this._plugin.getServer().getWorld(world_name);
-                        if (world == null) {
-                            XLogger.warn("ForceLoadChunks 配置错误: 世界 " + world_name + " 不存在");
-                        } else {
-                            world.setChunkForceLoaded(x, z, true);
-                            XLogger.info("标记强加载区块: " + world_name + " " + x + " " + z);
-                        }
-                    }
-                }
-
-            }, this._chunk_operate_delay * 20);
-        }
     }
 
     public Integer getHomeLimitAmount() {

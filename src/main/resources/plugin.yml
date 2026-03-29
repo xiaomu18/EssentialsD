@@ -242,7 +242,7 @@ commands:
     permission: essd.gamemode
   essd:
     description: EssentialsD control command
-    usage: /essd reload
+    usage: /essd <reload|version>
     permission: essd.control
   heal:
     description: Heal a player
