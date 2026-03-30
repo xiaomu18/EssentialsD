@@ -33,6 +33,8 @@ permissions:
       essd.tp.rtp: true
       essd.tp.back: true
       essd.inspect: true
+      essd.inspect.write: true
+      essd.inspect.offline: true
       essd.home: true
       essd.home.use-editor: true
       essd.setwarp: true
@@ -83,6 +85,10 @@ permissions:
   essd.tp.back:
     default: true
   essd.inspect:
+    default: op
+  essd.inspect.write:
+    default: op
+  essd.inspect.offline:
     default: op
   essd.home:
     default: true

@@ -66,7 +66,7 @@ public class InspectManager {
         Scheduler.runTaskRepeat(this::tickSessions, 20L, 10L);
     }
 
-    public void openInspect(Player viewer, OfflinePlayer target, Mode mode) {
+    public void openInspect(Player viewer, OfflinePlayer target, Mode mode, boolean writable) {
         closeSession(viewer.getUniqueId());
         if (target.isOnline()) {
             Player onlineTarget = target.getPlayer();
@@ -83,7 +83,7 @@ public class InspectManager {
                     Notification.warn(viewer, "玩家 %s 已下线，无法打开检查界面", source.displayName());
                     return;
                 }
-                openSession(viewer, source);
+                openSession(viewer, source, writable);
             }));
             return;
         }
@@ -98,7 +98,7 @@ public class InspectManager {
                     Notification.error(viewer, "无法读取玩家 %s 的离线数据", displayName(target));
                     return;
                 }
-                openSession(viewer, source);
+                openSession(viewer, source, false);
             });
         });
     }
@@ -108,7 +108,7 @@ public class InspectManager {
         if (session == null) {
             return;
         }
-        if (session.source().readOnly()) {
+        if (session.readOnly()) {
             event.setCancelled(true);
             return;
         }
@@ -145,7 +145,7 @@ public class InspectManager {
         if (session == null) {
             return;
         }
-        if (session.source().readOnly()) {
+        if (session.readOnly()) {
             event.setCancelled(true);
             return;
         }
@@ -172,7 +172,7 @@ public class InspectManager {
         if (session == null) {
             return;
         }
-        if (!session.source().readOnly()) {
+        if (!session.readOnly()) {
             session.restoreCursorItem(viewer);
             session.applyTopToSource();
         }
@@ -195,7 +195,7 @@ public class InspectManager {
         return clone;
     }
 
-    static ItemStack createInfoItem(InspectDataSource source) {
+    static ItemStack createInfoItem(InspectDataSource source, boolean readOnly) {
         ItemStack item = new ItemStack(source.mode() == Mode.ENDER_CHEST ? Material.ENDER_CHEST : Material.CHEST);
         ItemMeta meta = item.getItemMeta();
         meta.displayName(Component.text("检查目标信息", NamedTextColor.GOLD));
@@ -208,21 +208,21 @@ public class InspectManager {
                 .append(Component.text(source.isOnline() ? "在线" : "离线",
                         source.isOnline() ? NamedTextColor.GREEN : NamedTextColor.RED)));
         lore.add(Component.text("权限: ", NamedTextColor.DARK_GRAY)
-                .append(Component.text(source.readOnly() ? "只读模式" : "读写模式",
-                        source.readOnly() ? NamedTextColor.RED : NamedTextColor.GREEN)));
+                .append(Component.text(readOnly ? "只读模式" : "读写模式",
+                        readOnly ? NamedTextColor.RED : NamedTextColor.GREEN)));
         meta.lore(lore);
         item.setItemMeta(meta);
         return item;
     }
 
-    static Component createTitle(InspectDataSource source) {
+    static Component createTitle(InspectDataSource source, boolean readOnly) {
         TextComponent.Builder builder = Component.text();
-        builder.append(Component.text(source.displayName(), NamedTextColor.BLACK));
+        builder.append(Component.text(source.displayName(), NamedTextColor.YELLOW));
         builder.append(Component.text("[", NamedTextColor.WHITE));
         builder.append(Component.text(source.isOnline() ? "在线" : "离线",
                 source.isOnline() ? NamedTextColor.GREEN : NamedTextColor.RED));
-        builder.append(Component.text("]的" + (source.mode() == Mode.ENDER_CHEST ? "末影箱 " : "背包 "), NamedTextColor.WHITE));
-        builder.append(Component.text(source.readOnly() ? "[只读]" : "[读写]", NamedTextColor.DARK_GRAY));
+        builder.append(Component.text("] 的" + (source.mode() == Mode.ENDER_CHEST ? "末影箱 " : "背包 "), NamedTextColor.WHITE));
+        builder.append(Component.text(readOnly ? "[只读]" : "[读写模式]", NamedTextColor.DARK_GRAY));
         return builder.build();
     }
 
@@ -238,8 +238,8 @@ public class InspectManager {
         return item;
     }
 
-    private void openSession(Player viewer, InspectDataSource source) {
-        InspectSession session = new InspectSession(viewer.getUniqueId(), source);
+    private void openSession(Player viewer, InspectDataSource source, boolean writable) {
+        InspectSession session = new InspectSession(viewer.getUniqueId(), source, !writable);
         sessions.put(viewer.getUniqueId(), session);
         session.renderFromSource();
         viewer.openInventory(session.inventory());

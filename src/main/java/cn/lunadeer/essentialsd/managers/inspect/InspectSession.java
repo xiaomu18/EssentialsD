@@ -13,17 +13,19 @@ final class InspectSession {
 
     private final UUID viewerId;
     private final InspectDataSource source;
+    private final boolean readOnly;
     private final InspectInventoryHolder holder;
     private final Inventory inventory;
     private volatile long lastLocalEditAt = 0L;
     private volatile CursorOrigin cursorOrigin = null;
 
-    InspectSession(UUID viewerId, InspectDataSource source) {
+    InspectSession(UUID viewerId, InspectDataSource source, boolean readOnly) {
         this.viewerId = viewerId;
         this.source = source;
+        this.readOnly = readOnly;
         this.holder = new InspectInventoryHolder();
         int size = source.mode() == InspectManager.Mode.ENDER_CHEST ? InspectManager.ENDER_SLOT_COUNT : InspectManager.PLAYER_GUI_SIZE;
-        this.inventory = Bukkit.createInventory(holder, size, InspectManager.createTitle(source));
+        this.inventory = Bukkit.createInventory(holder, size, InspectManager.createTitle(source, readOnly));
         this.holder.setInventory(this.inventory);
     }
 
@@ -35,12 +37,16 @@ final class InspectSession {
         return source;
     }
 
+    boolean readOnly() {
+        return readOnly;
+    }
+
     Inventory inventory() {
         return inventory;
     }
 
     boolean editable(int rawSlot) {
-        if (source.readOnly()) {
+        if (readOnly) {
             return false;
         }
         if (rawSlot < 0 || rawSlot >= inventory.getSize()) {
@@ -84,7 +90,7 @@ final class InspectSession {
                 inventory.setItem(i, InspectManager.FILLER.clone());
             }
         }
-        inventory.setItem(8, InspectManager.createInfoItem(source));
+        inventory.setItem(8, InspectManager.createInfoItem(source, readOnly));
     }
 
     void applyTopToSource() {

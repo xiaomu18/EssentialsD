@@ -14,6 +14,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 
 public class Inspect implements CommandExecutor {
+    private static final String PERMISSION_INSPECT = "essd.inspect";
+    private static final String PERMISSION_INSPECT_WRITE = "essd.inspect.write";
+    private static final String PERMISSION_INSPECT_OFFLINE = "essd.inspect.offline";
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
@@ -44,13 +47,25 @@ public class Inspect implements CommandExecutor {
             Notification.error(sender, "用法: /inspect <玩家> [--ender]");
             return true;
         }
+        if (!viewer.hasPermission(PERMISSION_INSPECT)) {
+            Notification.error(viewer, "你没有权限使用该命令");
+            return true;
+        }
 
         OfflinePlayer target = resolveOfflinePlayer(targetArg);
+        boolean writable = false;
+        if (target.isOnline()) {
+            writable = viewer.hasPermission(PERMISSION_INSPECT_WRITE);
+        } else if (!viewer.hasPermission(PERMISSION_INSPECT_OFFLINE)) {
+            Notification.error(viewer, "你没有权限查看离线玩家的背包");
+            return true;
+        }
 
         EssentialsD.inspectManager.openInspect(
                 viewer,
                 target,
-                enderMode ? InspectManager.Mode.ENDER_CHEST : InspectManager.Mode.PLAYER_INVENTORY
+                enderMode ? InspectManager.Mode.ENDER_CHEST : InspectManager.Mode.PLAYER_INVENTORY,
+                writable
         );
         return true;
     }
