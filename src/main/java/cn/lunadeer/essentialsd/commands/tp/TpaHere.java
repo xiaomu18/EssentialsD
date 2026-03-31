@@ -1,7 +1,6 @@
 package cn.lunadeer.essentialsd.commands.tp;
 
 import cn.lunadeer.essentialsd.EssentialsD;
-import cn.lunadeer.essentialsd.commands.Vanish;
 import cn.lunadeer.utils.Notification;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -18,7 +17,7 @@ public class TpaHere implements CommandExecutor {
             Player player = (Player) sender;
             if (args.length == 1) {
                 Player target = EssentialsD.instance.getServer().getPlayer(args[0]);
-                if (target == null || ((Vanish) EssentialsD.commands.get("vanish")).invList.contains(target.getUniqueId())) {
+                if (target == null || EssentialsD.vanishManager.isHiddenFrom(player, target)) {
                     Notification.warn(player, "玩家 %s 不在线", args[0]);
                     return true;
                 } else {

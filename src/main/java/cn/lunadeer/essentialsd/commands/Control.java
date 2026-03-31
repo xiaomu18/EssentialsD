@@ -22,6 +22,7 @@ public class Control implements TabExecutor {
         if ("reload".equalsIgnoreCase(args[0])) {
             EssentialsD.config.reload();
             EssentialsD.muteManager.reload();
+            EssentialsD.vanishManager.reload();
             Notification.info(sender, "已重新读取配置文件");
             return true;
         }

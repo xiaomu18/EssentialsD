@@ -35,6 +35,12 @@ public class ChatFunctionEvent implements Listener {
         Player player = event.getPlayer();
         boolean self_deception = false;
 
+        if (EssentialsD.vanishManager.isVanished(player) && !EssentialsD.vanishManager.canChatWhileVanished(player)) {
+            event.setCancelled(true);
+            Notification.warn(player, "你当前处于隐身状态，无法在公屏发言");
+            return;
+        }
+
         if (Bukkit.getPluginManager().isPluginEnabled("AuthMe")) {
             if (!AuthMeApi.getInstance().isAuthenticated(player)) {
                 event.setCancelled(true);

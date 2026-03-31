@@ -44,6 +44,9 @@ permissions:
       essd.unmute: true
       essd.kickall: true
       essd.vanish: true
+      essd.vanish.other: true
+      essd.vanish.see: true
+      essd.vanish.chat: true
       essd.control: true
       essd.heal: true
       essd.gamemode: true
@@ -108,6 +111,12 @@ permissions:
     default: op
   essd.vanish:
     default: op
+  essd.vanish.other:
+    default: false
+  essd.vanish.see:
+    default: op
+  essd.vanish.chat:
+    default: false
   essd.control:
     default: op
   essd.heal:
@@ -236,7 +245,7 @@ commands:
     permission: essd.kickall
   vanish:
     description: Toggle vanish mode
-    usage: /vanish [on/off]
+    usage: /vanish <list|on|off> [player]
     permission: essd.vanish
   gamemode:
     description: Set a player's game mode

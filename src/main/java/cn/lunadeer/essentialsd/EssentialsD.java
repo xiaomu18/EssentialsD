@@ -17,6 +17,7 @@ import cn.lunadeer.essentialsd.managers.DatabaseTables;
 import cn.lunadeer.essentialsd.managers.inspect.InspectManager;
 import cn.lunadeer.essentialsd.managers.MuteManager;
 import cn.lunadeer.essentialsd.managers.TeleportManager;
+import cn.lunadeer.essentialsd.managers.VanishManager;
 import cn.lunadeer.essentialsd.recipes.*;
 import cn.lunadeer.utils.DatabaseManager;
 import cn.lunadeer.utils.Notification;
@@ -41,6 +42,7 @@ public final class EssentialsD extends JavaPlugin {
     public static DatabaseManager database;
     public static MuteManager muteManager;
     public static InspectManager inspectManager;
+    public static VanishManager vanishManager;
     public static Map<String, CommandExecutor> commands = new HashMap<>();
     private String buildDate = "未知";
     private String projectUrl = "https://github.com/xiaomu18/EssentialsD";
@@ -57,6 +59,7 @@ public final class EssentialsD extends JavaPlugin {
         new Scheduler(this);
         tpManager = new TeleportManager();
         inspectManager = new InspectManager();
+        vanishManager = new VanishManager();
         new TextUserInterfaceManager(this);
 
         Bukkit.getPluginManager().registerEvents(new ChatFunctionEvent(), this);
@@ -72,6 +75,7 @@ public final class EssentialsD extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new CreativeTakeListener(), this);
         Bukkit.getPluginManager().registerEvents(new CommandPreprocessEvent(), this);
         Bukkit.getPluginManager().registerEvents(new InspectInventoryEvent(), this);
+        Bukkit.getPluginManager().registerEvents(new VanishEvent(), this);
 
         commands.put("fly", new Fly());
         commands.put("god", new God());
