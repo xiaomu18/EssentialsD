@@ -47,6 +47,7 @@ permissions:
       essd.vanish.other: true
       essd.vanish.see: true
       essd.vanish.chat: true
+      essd.vanish.tpahere: true
       essd.control: true
       essd.heal: true
       essd.gamemode: true
@@ -116,6 +117,8 @@ permissions:
   essd.vanish.see:
     default: op
   essd.vanish.chat:
+    default: false
+  essd.vanish.tpahere:
     default: false
   essd.control:
     default: op

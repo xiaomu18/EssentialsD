@@ -16,6 +16,10 @@ public class TpaHere implements CommandExecutor {
         } else {
             Player player = (Player) sender;
             if (args.length == 1) {
+                if (EssentialsD.vanishManager.isVanished(player) && !EssentialsD.vanishManager.canTpahereWhileVanished(player)) {
+                    Notification.warn(player, "你当前处于隐身状态，不能发送 tpahere 请求");
+                    return true;
+                }
                 Player target = EssentialsD.instance.getServer().getPlayer(args[0]);
                 if (target == null || EssentialsD.vanishManager.isHiddenFrom(player, target)) {
                     Notification.warn(player, "玩家 %s 不在线", args[0]);

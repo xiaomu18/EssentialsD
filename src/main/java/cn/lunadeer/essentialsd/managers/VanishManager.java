@@ -24,6 +24,7 @@ public class VanishManager {
     public static final String PERMISSION_OTHER = "essd.vanish.other";
     public static final String PERMISSION_SEE = "essd.vanish.see";
     public static final String PERMISSION_CHAT = "essd.vanish.chat";
+    public static final String PERMISSION_TPAHERE = "essd.vanish.tpahere";
 
     private final Set<UUID> manualVanished = ConcurrentHashMap.newKeySet();
     private final Set<UUID> forcedVanished = ConcurrentHashMap.newKeySet();
@@ -52,6 +53,10 @@ public class VanishManager {
 
     public boolean canChatWhileVanished(Player player) {
         return player.hasPermission(PERMISSION_CHAT);
+    }
+
+    public boolean canTpahereWhileVanished(Player player) {
+        return player.hasPermission(PERMISSION_TPAHERE);
     }
 
     public boolean isHiddenFrom(Player viewer, Player target) {
