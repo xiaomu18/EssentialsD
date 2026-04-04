@@ -1,8 +1,8 @@
 name: EssentialsD
-version: "2.3.8"
-main: cn.lunadeer.essentialsd.EssentialsD
+version: "2.3.9"
+main: et.xiaomu.essentialsd.EssentialsD
 api-version: "1.21"
-description: Deer's Essentials Redesigned
+description: Deer's Essentials Reloaded
 authors: ["lunadeer", "xiaomu18"]
 load: STARTUP
 folia-supported: true

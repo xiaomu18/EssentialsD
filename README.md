@@ -1,9 +1,9 @@
-# Deer's Essentials Redesigned
+# Deer's Essentials Reloaded
 ### 适用于 Folia 服务端的高版本 Minecraft 基础插件
 
-本插件为 MC 服务器提供原版没有的实用基础命令和扩展功能，可在新一代多线程服务端 [Folia](https://papermc.io/downloads/folia) 上运行
+本插件为 Minecraft 服务器添加了很多实用的扩展命令和扩展功能，并提供了一系列方便管理员进行服务器管理的功能，一切功能都基于新一代多线程 [Folia](https://papermc.io/downloads/folia) 服务端进行设计，完美适配。
 
-此插件是 [EssentialsD](https://ssl.lunadeer.cn:14446/zhangyuheng/EssentialsD) 的重置版 (原作者已不再更新)，从 Aug 23 2025 起由我继续维护，已重写部分重要功能。
+此插件算是 [EssentialsD](https://ssl.lunadeer.cn:14446/zhangyuheng/EssentialsD) 的重置版 (原作者已停止维护, 删库跑路了？)，EssentialsD Reload 从 Aug 23 2025 起我创建并重写。
 
 ## 🍂 功能概述
 
@@ -46,18 +46,15 @@ EssentialsD 拥有以下命令:
 * 修改附魔瓶经验值倍率
 * 自动合并经验球
 * 开启经验吸收无冷却
-* 强加载指定区块
 * 实用的合成表扩展
 * 把楼梯当作椅子使用 (点击楼梯坐上去, 类似于 sit 插件)
 * 自定义聊天格式，支持使用 MiniMessage 样式化格式 (可代替简单的聊天插件)
 * 可允许玩家在聊天中使用 minimessage 样式化聊天消息
 * 一键屏蔽或替换敏感词 **(新功能)**
 * 限制发言速度 **(新功能)**
-* 禁止创造拿取特定物品或带有nbt的物品 (在创造服中很有用)
+* 禁止创造拿取特定物品或带有 NBT 的物品 (在创造服中很有用)
 * 限制玩家使用命令的间隔
 * 强制禁用指定命令
-
-以上功能均可在 `config.yml` 中启用和配置
 
 ## 🌳 下载地址
 在这里 [下载最新的 EssentialsD 构建](https://github.com/xiaomu18/EssentialsD/releases)
