@@ -27,6 +27,7 @@ public class VanishManager {
 
     private final Set<UUID> manualVanished = ConcurrentHashMap.newKeySet();
     private final Set<UUID> forcedVanished = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> vanishInvulnerable = ConcurrentHashMap.newKeySet();
     private final BossBar bossBar = Bukkit.createBossBar("§7你正处于隐身状态", BarColor.WHITE, BarStyle.SEGMENTED_6);
 
     public boolean isVanished(UUID playerId) {
@@ -105,9 +106,11 @@ public class VanishManager {
         refreshForcedState(player, false);
         if (isVanished(player)) {
             ensureBossBar(player);
+            ensureInvulnerable(player);
             Notification.warn(player, isForced(player.getUniqueId()) ? "你当前处于强制隐身状态" : "你仍处于隐身状态");
         } else {
             removeBossBar(player);
+            clearVanishInvulnerable(player);
         }
         refreshTargetForAllViewers(player);
         refreshViewerForAllTargets(player);
@@ -115,6 +118,7 @@ public class VanishManager {
 
     public void handleQuit(Player player) {
         forcedVanished.remove(player.getUniqueId());
+        vanishInvulnerable.remove(player.getUniqueId());
         removeBossBar(player);
     }
 
@@ -139,8 +143,10 @@ public class VanishManager {
     private void onVisibilityStateChanged(Player target, boolean vanished) {
         if (vanished) {
             ensureBossBar(target);
+            ensureInvulnerable(target);
         } else {
             removeBossBar(target);
+            clearVanishInvulnerable(target);
         }
         refreshTargetForAllViewers(target);
     }
@@ -183,5 +189,29 @@ public class VanishManager {
 
     private void removeBossBar(Player player) {
         Scheduler.runEntityTask(player, () -> bossBar.removePlayer(player));
+    }
+
+    private void ensureInvulnerable(Player player) {
+        Scheduler.runEntityTask(player, () -> {
+            if (!player.isOnline()) {
+                return;
+            }
+            if (!player.isInvulnerable()) {
+                vanishInvulnerable.add(player.getUniqueId());
+                player.setInvulnerable(true);
+            }
+        });
+    }
+
+    private void clearVanishInvulnerable(Player player) {
+        Scheduler.runEntityTask(player, () -> {
+            if (!player.isOnline()) {
+                vanishInvulnerable.remove(player.getUniqueId());
+                return;
+            }
+            if (vanishInvulnerable.remove(player.getUniqueId())) {
+                player.setInvulnerable(false);
+            }
+        });
     }
 }
