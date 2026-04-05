@@ -20,6 +20,10 @@ public class SetHome implements TabExecutor {
             return true;
         } else {
             Player player = (Player) sender;
+            if (EssentialsD.config.getHomeWorldBlacklist().contains(player.getWorld().getName())) {
+                Notification.error(player, "当前世界 %s 不允许设置家", player.getWorld().getName());
+                return true;
+            }
             List<HomeInfo> homes = HomeInfo.getHomesOf(((Player) sender).getUniqueId());
             if (homes.size() > EssentialsD.config.getHomeLimitAmount()) {
                 Notification.error(player, "你的家数量已达上限");

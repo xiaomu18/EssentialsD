@@ -25,7 +25,9 @@ public class ConfigManager {
     private Integer _tp_tpa_expire;
     private Integer _tp_delay;
     private Integer _tp_cool_down;
+    private Integer _tp_rtp_cool_down;
     private Integer _tp_rtp_radius;
+    private Boolean _tp_log_player_teleport;
     private List<String> _tp_world_blacklist;
     private Boolean _chair_enable;
     private Integer _chair_max_width;
@@ -84,8 +86,10 @@ public class ConfigManager {
         this._no_exp_cool_down = this._file.getBoolean("NoExpCoolDown", false);
         this._tp_delay = this._file.getInt("Teleport.Delay", 0);
         this._tp_cool_down = this._file.getInt("Teleport.CoolDown", 0);
+        this._tp_rtp_cool_down = this._file.getInt("Teleport.RtpCoolDown", 0);
         this._tp_tpa_expire = this._file.getInt("Teleport.TpaExpire", 30);
         this._tp_rtp_radius = this._file.getInt("Teleport.RtpRadius", 1000);
+        this._tp_log_player_teleport = this._file.getBoolean("Teleport.log-player-teleport", false);
         this._tp_world_blacklist = this._file.getStringList("Teleport.WorldBlackList");
         this._chair_enable = this._file.getBoolean("Chair.Enable", true);
         this._chair_max_width = this._file.getInt("Chair.MaxWidth", 4);
@@ -106,7 +110,7 @@ public class ConfigManager {
 
         this.CMD_ENABLE = this._file.getBoolean("command-manager.Enable", false);
         this.CMD_COOLDOWN_MS = this._file.getLong("command-manager.cooldown", 2000);
-        this.CMD_BANNED_LIST = this._file.getStringList("command-manager.banned_command");
+        this.CMD_BANNED_LIST = normalizeCommands(this._file.getStringList("command-manager.banned_command"));
         this.CMD_CD_MESSAGE = this._file.getString("command-manager.cd_message");
 
         this.forbidWords = this._file.getStringList("chat.forbid-keywords");
@@ -282,12 +286,20 @@ public class ConfigManager {
         return this._tp_cool_down;
     }
 
+    public Integer getTpRtpCoolDown() {
+        return this._tp_rtp_cool_down;
+    }
+
     public Integer getTpTpaExpire() {
         return this._tp_tpa_expire;
     }
 
     public Integer getTpRtpRadius() {
         return this._tp_rtp_radius;
+    }
+
+    public Boolean getTpLogPlayerTeleport() {
+        return this._tp_log_player_teleport;
     }
 
     public List<String> getTpWorldBlackList() {

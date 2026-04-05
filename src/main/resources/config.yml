@@ -33,8 +33,10 @@ Recipes:
 Teleport:
   Delay: 0            # 传送延迟 秒
   CoolDown: 0         # 冷却时间 秒
+  RtpCoolDown: 0      # /rtp 独立冷却时间 秒
   TpaExpire: 30       # 传送请求有效期 秒
   RtpRadius: 1000     # 随机传送最大半径
+  log-player-teleport: false # 记录本插件触发的玩家传送日志
   WorldBlackList: [ ] # 不允许传送的世界
 
 # 把楼梯当作椅子使用
@@ -94,10 +96,11 @@ command-manager:
   # 拥有 essd.bypass.CommandCD 权限可以绕过此限制
   cooldown: 1000 # 毫秒 (1s=1000ms)
   cd_message: "你使用命令太快，请稍后重试"
-  # 要禁用的命令, 仅拥有op权限的玩家可用
+  # 禁止所有玩家执行的一级命令，仅控制台可执行
+  # 这里只填主命令名，不要带 /
   banned_command:
-    - "/op"
-    - "/deop"
+    - "op"
+    - "deop"
 
 Creative-ItemTake:
   banned-item:

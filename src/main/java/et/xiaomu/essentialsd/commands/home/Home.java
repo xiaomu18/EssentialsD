@@ -37,9 +37,15 @@ public class Home implements TabExecutor {
             if (home == null) {
                 Notification.error(player, "不存在名为 %s 的家", homeName);
                 return true;
+            } else if (EssentialsD.config.getHomeWorldBlacklist().contains(home.location.getWorld().getName())) {
+                Notification.error(player, "家 %s 所在世界 %s 不允许传送", homeName, home.location.getWorld().getName());
+                return true;
             } else {
                 try {
-                    EssentialsD.tpManager.doTeleportDelayed(player, home.location, EssentialsD.config.getTpDelay(), () -> Notification.info(player, "正在传送到家 %s", homeName), () -> Notification.info(player, "成功传送到家 %s", homeName));
+                    EssentialsD.tpManager.doTeleportDelayed(player, home.location, EssentialsD.config.getTpDelay(),
+                            () -> Notification.info(player, "正在传送到家 %s", homeName),
+                            () -> Notification.info(player, "成功传送到家 %s", homeName),
+                            EssentialsD.tpManager.createLogContext("home:" + homeName));
                 } catch (RuntimeException e) {
                     Notification.error(player, "传送到家 %s 失败: %s", homeName, e.getMessage());
                 }

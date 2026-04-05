@@ -29,7 +29,10 @@ public class Warp implements TabExecutor {
                     return true;
                 } else {
                     try {
-                        EssentialsD.tpManager.doTeleportDelayed(player, point.getLocation(), (Integer) EssentialsD.config.getTpDelay(), () -> Notification.info(player, "正在传送到 %s", strings[0]), () -> Notification.info(player, "已传送到 %s", strings[0]));
+                        EssentialsD.tpManager.doTeleportDelayed(player, point.getLocation(), EssentialsD.config.getTpDelay(),
+                                () -> Notification.info(player, "正在传送到 %s", strings[0]),
+                                () -> Notification.info(player, "已传送到 %s", strings[0]),
+                                EssentialsD.tpManager.createLogContext("warp:" + strings[0]));
                     } catch (RuntimeException e) {
                         Notification.error(player, e.getMessage());
                     }

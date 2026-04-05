@@ -25,9 +25,20 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class TeleportManager {
     private static final TextColor MAIN_COLOR = TextColor.color(0, 233, 255);
+    private static final TeleportLogContext NO_LOG_CONTEXT = new TeleportLogContext("unknown", null);
+
     private final ConcurrentHashMap<UUID, TpTask> tasks = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, LocalDateTime> nextTimeAllowTp = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, LocalDateTime> nextTimeAllowRtp = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, Location> lastTpLocation = new ConcurrentHashMap<>();
+
+    public TeleportLogContext createLogContext(String reason) {
+        return new TeleportLogContext(reason, null);
+    }
+
+    public TeleportLogContext createLogContext(String reason, Player targetPlayer) {
+        return new TeleportLogContext(reason, targetPlayer == null ? null : targetPlayer.getName());
+    }
 
     private boolean tpReqCheck(Player initiator, Player target) {
         if (initiator == target) {
@@ -166,7 +177,8 @@ public class TeleportManager {
                         () -> {
                             Notification.info(task.initiator, "已传送到 %s 的位置", task.target.getName());
                             Notification.info(task.target, "玩家 %s 已传送到你的位置", task.initiator.getName());
-                        });
+                        },
+                        createLogContext("tpa", task.target));
             } catch (RuntimeException e) {
                 Notification.error(player, e.getMessage());
             }
@@ -177,7 +189,8 @@ public class TeleportManager {
                         () -> {
                             Notification.info(task.target, "已传送到 %s 的位置", task.initiator.getName());
                             Notification.info(task.initiator, "玩家 %s 已传送到你的位置", task.target.getName());
-                        });
+                        },
+                        createLogContext("tpahere", task.initiator));
             } catch (RuntimeException e) {
                 Notification.error(player, e.getMessage());
             }
@@ -206,7 +219,8 @@ public class TeleportManager {
         try {
             doTeleportDelayed(player, target, EssentialsD.config.getTpDelay(),
                     () -> Notification.info(player, "正在返回上次传送的位置"),
-                    () -> Notification.info(player, "已返回上次传送的位置"));
+                    () -> Notification.info(player, "已返回上次传送的位置"),
+                    createLogContext("back"));
         } catch (RuntimeException e) {
             Notification.error(player, e.getMessage());
         }
@@ -215,6 +229,9 @@ public class TeleportManager {
     public void rtp(Player player) {
         if (EssentialsD.config.getTpWorldBlackList().contains(player.getWorld().getName())) {
             Notification.error(player, "此世界 %s 不允许传送", player.getWorld().getName());
+            return;
+        }
+        if (!RtpCoolingDown(player)) {
             return;
         }
         if (!CoolingDown(player)) {
@@ -243,17 +260,26 @@ public class TeleportManager {
         try {
             doTeleportDelayed(player, location, EssentialsD.config.getTpDelay(),
                     () -> Notification.info(player, "正在传送到随机位置"),
-                    () -> Notification.info(player, "已传送到随机位置"));
+                    () -> Notification.info(player, "已传送到随机位置"),
+                    createLogContext("rtp"));
         } catch (RuntimeException e) {
             Notification.error(player, e.getMessage());
         }
     }
 
     public void doTeleportDelayed(Player player, Location location, Integer delay, Runnable before, Runnable after) {
-        doTeleportDelayed(player, location, delay.longValue(), before, after);
+        doTeleportDelayed(player, location, delay.longValue(), before, after, NO_LOG_CONTEXT);
+    }
+
+    public void doTeleportDelayed(Player player, Location location, Integer delay, Runnable before, Runnable after, TeleportLogContext context) {
+        doTeleportDelayed(player, location, delay.longValue(), before, after, context);
     }
 
     public void doTeleportDelayed(Player player, Location to, Long delay, Runnable before, Runnable after) {
+        doTeleportDelayed(player, to, delay, before, after, NO_LOG_CONTEXT);
+    }
+
+    public void doTeleportDelayed(Player player, Location to, Long delay, Runnable before, Runnable after, TeleportLogContext context) {
         if (EssentialsD.config.getTpWorldBlackList().contains(to.getWorld().getName())) {
             Notification.error(player, "目的地所在世界 %s 不允许传送", to.getWorld().getName());
             return;
@@ -282,14 +308,14 @@ public class TeleportManager {
             });
             Scheduler.runTaskLater(() -> {
                 before.run();
-                doTeleportSafely(player, to);
+                doTeleportSafely(player, to, context);
                 after.run();
             }, 20L * delay);
             return;
         }
 
         before.run();
-        doTeleportSafely(player, to);
+        doTeleportSafely(player, to, context);
         after.run();
     }
 
@@ -305,17 +331,22 @@ public class TeleportManager {
     }
 
     public void doTeleportSafely(Player player, Location location) {
+        doTeleportSafely(player, location, NO_LOG_CONTEXT);
+    }
+
+    public void doTeleportSafely(Player player, Location location, TeleportLogContext context) {
         if (!CoolingDown(player)) {
             return;
         }
 
         LocalDateTime now = LocalDateTime.now();
         nextTimeAllowTp.put(player.getUniqueId(), now.plusSeconds(EssentialsD.config.getTpCoolDown()));
-        location.getWorld().getChunkAtAsyncUrgently(location).thenAccept(chunk -> {
+        Location targetLocation = location.clone();
+        targetLocation.getWorld().getChunkAtAsyncUrgently(targetLocation).thenAccept(chunk -> {
             int maxAttempts = 512;
 
-            while (location.getBlock().isPassable()) {
-                location.setY(location.getY() - 1.0D);
+            while (targetLocation.getBlock().isPassable()) {
+                targetLocation.setY(targetLocation.getY() - 1.0D);
                 maxAttempts--;
                 if (maxAttempts <= 0) {
                     Notification.error(player, "传送目的地不安全，已取消传送");
@@ -323,13 +354,13 @@ public class TeleportManager {
                 }
             }
 
-            Block up1 = location.getBlock().getRelative(BlockFace.UP);
+            Block up1 = targetLocation.getBlock().getRelative(BlockFace.UP);
             Block up2 = up1.getRelative(BlockFace.UP);
             maxAttempts = 512;
 
             while (!up1.isPassable() || up1.isLiquid() || !up2.isPassable() || up2.isLiquid()) {
-                location.setY(location.getY() + 1.0D);
-                up1 = location.getBlock().getRelative(BlockFace.UP);
+                targetLocation.setY(targetLocation.getY() + 1.0D);
+                up1 = targetLocation.getBlock().getRelative(BlockFace.UP);
                 up2 = up1.getRelative(BlockFace.UP);
                 maxAttempts--;
                 if (maxAttempts <= 0) {
@@ -338,15 +369,67 @@ public class TeleportManager {
                 }
             }
 
-            location.setY(location.getY() + 1.0D);
-            if (location.getBlock().getRelative(BlockFace.DOWN).getType() == Material.LAVA) {
+            targetLocation.setY(targetLocation.getY() + 1.0D);
+            if (targetLocation.getBlock().getRelative(BlockFace.DOWN).getType() == Material.LAVA) {
                 Notification.error(player, "传送目的地不安全，已取消传送");
                 return;
             }
 
             updateLastTpLocation(player);
-            player.teleportAsync(location, TeleportCause.PLUGIN);
+            Location finalLocation = targetLocation.clone();
+            player.teleportAsync(finalLocation, TeleportCause.PLUGIN).thenAccept(success -> {
+                if (Boolean.TRUE.equals(success)) {
+                    applyRtpCooldown(player, context);
+                    logPlayerTeleport(player, finalLocation, context);
+                }
+            });
         });
+    }
+
+    private boolean RtpCoolingDown(Player player) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime nextTime = nextTimeAllowRtp.get(player.getUniqueId());
+        if (nextTime != null && now.isBefore(nextTime)) {
+            long secsUntilNext = now.until(nextTime, ChronoUnit.SECONDS);
+            Notification.warn(player, "请等待 %d 秒后再次使用随机传送", secsUntilNext);
+            return false;
+        }
+        return true;
+    }
+
+    private void applyRtpCooldown(Player player, TeleportLogContext context) {
+        if (!"rtp".equals(context.reason())) {
+            return;
+        }
+        int cooldown = EssentialsD.config.getTpRtpCoolDown();
+        if (cooldown <= 0) {
+            return;
+        }
+        nextTimeAllowRtp.put(player.getUniqueId(), LocalDateTime.now().plusSeconds(cooldown));
+    }
+
+    private void logPlayerTeleport(Player player, Location location, TeleportLogContext context) {
+        if (!EssentialsD.config.getTpLogPlayerTeleport()) {
+            return;
+        }
+        if (context.targetPlayerName() == null || context.targetPlayerName().isBlank()) {
+            XLogger.info("Teleport Log | name={0} | reason={1} | destination={2}:{3},{4},{5}",
+                    player.getName(),
+                    context.reason(),
+                    location.getWorld().getName(),
+                    location.getBlockX(),
+                    location.getBlockY(),
+                    location.getBlockZ());
+            return;
+        }
+        XLogger.info("Teleport Log | name={0} | reason={1} | target={2} | destination={3}:{4},{5},{6}",
+                player.getName(),
+                context.reason(),
+                context.targetPlayerName(),
+                location.getWorld().getName(),
+                location.getBlockX(),
+                location.getBlockY(),
+                location.getBlockZ());
     }
 
     public void updateLastTpLocation(Player player) {
@@ -356,6 +439,7 @@ public class TeleportManager {
     public void shutdown() {
         tasks.clear();
         nextTimeAllowTp.clear();
+        nextTimeAllowRtp.clear();
         lastTpLocation.clear();
     }
 
@@ -364,5 +448,8 @@ public class TeleportManager {
         private Player target;
         private UUID taskId;
         private boolean tpahere;
+    }
+
+    public record TeleportLogContext(String reason, String targetPlayerName) {
     }
 }

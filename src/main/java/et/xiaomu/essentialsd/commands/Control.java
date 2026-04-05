@@ -27,8 +27,8 @@ public class Control implements TabExecutor {
             return true;
         }
         if ("version".equalsIgnoreCase(args[0])) {
-            Notification.info(sender, "This server is running EssentialsD v%s - %s@%s (%s) (Implementing API version %s)", EssentialsD.instance.getPluginMeta().getVersion(), EssentialsD.gitBranch, EssentialsD.instance.getGitCommit(), EssentialsD.instance.getBuildDate(), EssentialsD.instance.getPluginMeta().getAPIVersion());
-            Notification.info(sender, "Github Repository URL: %s", EssentialsD.instance.getProjectUrl());
+            Notification.info(sender, "This server is running EssentialsD v%s %s@%s (%s) (Implementing API version %s)", EssentialsD.instance.getPluginMeta().getVersion(), EssentialsD.gitBranch, EssentialsD.instance.getGitCommit(), EssentialsD.instance.getBuildDate(), EssentialsD.instance.getPluginMeta().getAPIVersion());
+            Notification.info(sender, EssentialsD.instance.getProjectUrl());
             return true;
         }
         Notification.error(sender, "用法: /essd <reload|version>");

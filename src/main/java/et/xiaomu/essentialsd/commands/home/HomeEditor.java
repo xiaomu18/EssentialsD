@@ -37,9 +37,14 @@ public class HomeEditor implements TabExecutor {
             }
             for (HomeInfo home : homes) {
                 if (home.homeName.equals(args[2])) {
+                    if (EssentialsD.config.getHomeWorldBlacklist().contains(home.location.getWorld().getName())) {
+                        Notification.warn(sender, "玩家 %s 的家 %s 位于禁止传送的世界 %s", player.getName(), home.homeName, home.location.getWorld().getName());
+                        return true;
+                    }
                     EssentialsD.tpManager.doTeleportDelayed(commandPlayer, home.location, 0,
                             () -> Notification.info(sender, "正在传送..."),
-                            () -> Notification.info(sender, "成功传送到 %s 的家 %s", player.getName(), home.homeName));
+                            () -> Notification.info(sender, "成功传送到 %s 的家 %s", player.getName(), home.homeName),
+                            EssentialsD.tpManager.createLogContext("home-editor:" + player.getName() + "/" + home.homeName));
                     return true;
                 }
             }

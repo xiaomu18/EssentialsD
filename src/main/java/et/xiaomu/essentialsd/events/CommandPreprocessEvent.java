@@ -7,12 +7,16 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerCommandSendEvent;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
 public class CommandPreprocessEvent implements Listener {
+    private static final String BLOCKED_COMMAND_ALIAS = "__essd_blocked_command__";
+
     // 存储玩家最后一次使用命令的时间戳
     private final Map<UUID, Long> lastCommandTime = new HashMap<>();
 
@@ -34,6 +38,12 @@ public class CommandPreprocessEvent implements Listener {
             return;
         }
 
+        String rootCommand = extractRootCommand(message);
+        if (isBlockedCommand(rootCommand)) {
+            event.setMessage("/" + BLOCKED_COMMAND_ALIAS);
+            return;
+        }
+
         // 检查玩家是否有绕过权限
         if (!player.hasPermission("essd.bypass.CommandCD")) {
             long currentTime = System.currentTimeMillis();
@@ -52,14 +62,44 @@ public class CommandPreprocessEvent implements Listener {
             // 更新最后使用时间
             lastCommandTime.put(player.getUniqueId(), currentTime);
         }
+    }
 
-        if (!player.isOp()) {
-            for (String banned_cmd : EssentialsD.config.CMD_BANNED_LIST) {
-                if (message.startsWith(banned_cmd)) {
-                    event.setCancelled(true);
-                    Notification.warn(player, "此命令在此服务器上不可用");
-                }
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPlayerCommandSend(PlayerCommandSendEvent event) {
+        if (!EssentialsD.config.CMD_ENABLE) {
+            return;
+        }
+        event.getCommands().removeIf(this::isBlockedCommand);
+    }
+
+    private boolean isBlockedCommand(String command) {
+        if (command == null || command.isBlank()) {
+            return false;
+        }
+        for (String bannedCommand : EssentialsD.config.CMD_BANNED_LIST) {
+            if (command.equals(bannedCommand)) {
+                return true;
             }
         }
+        return false;
+    }
+
+    private String extractRootCommand(String message) {
+        String value = message == null ? "" : message.trim();
+        while (value.startsWith("/")) {
+            value = value.substring(1);
+        }
+        if (value.isBlank()) {
+            return "";
+        }
+        int spaceIndex = value.indexOf(' ');
+        if (spaceIndex >= 0) {
+            value = value.substring(0, spaceIndex);
+        }
+        int namespaceIndex = value.indexOf(':');
+        if (namespaceIndex >= 0 && namespaceIndex + 1 < value.length()) {
+            value = value.substring(namespaceIndex + 1);
+        }
+        return value.toLowerCase(Locale.ROOT);
     }
 }
