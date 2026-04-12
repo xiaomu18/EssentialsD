@@ -1,5 +1,6 @@
 package et.xiaomu.essentialsd.managers.inspect;
 
+import cn.lunadeer.utils.XLogger;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 
@@ -42,6 +43,7 @@ final class NbtBridge {
     private final Method codecParseMethod;
     private final Method codecEncodeStartMethod;
     private final Method dataResultMethod;
+    private final Method dataErrorMethod;
     private final List<Field> itemCodecFields;
     private volatile Field selectedItemCodecField;
     private final byte getByteFallbackValue = 0;
@@ -83,7 +85,9 @@ final class NbtBridge {
             this.serializationOps = createSerializationOps();
             this.codecParseMethod = codecClass.getMethod("parse", dynamicOpsClass, Object.class);
             this.codecEncodeStartMethod = codecClass.getMethod("encodeStart", dynamicOpsClass, Object.class);
-            this.dataResultMethod = Class.forName("com.mojang.serialization.DataResult").getMethod("result");
+            Class<?> dataResultClass = Class.forName("com.mojang.serialization.DataResult");
+            this.dataResultMethod = dataResultClass.getMethod("result");
+            this.dataErrorMethod = dataResultClass.getMethod("error");
             this.itemCodecFields = findItemCodecFields();
         } catch (Exception e) {
             throw new IllegalStateException("无法初始化离线背包 NBT 桥接: " + e.getClass().getSimpleName() + " - " + e.getMessage(), e);
@@ -107,7 +111,7 @@ final class NbtBridge {
             byte slot = getByte(entry, "Slot");
             int logical = nbtInventorySlotToLogical(slot);
             if (logical >= 0) {
-                items[logical] = fromTag(entry);
+                items[logical] = readItemSafely(entry, "背包槽位 " + logical);
             }
         }
         applyEquipment(rootTag, items);
@@ -120,7 +124,7 @@ final class NbtBridge {
         for (Object entry : (Iterable<?>) list) {
             int slot = Byte.toUnsignedInt(getByte(entry, "Slot"));
             if (slot >= 0 && slot < InspectManager.ENDER_SLOT_COUNT) {
-                items[slot] = fromTag(entry);
+                items[slot] = readItemSafely(entry, "末影箱槽位 " + slot);
             }
         }
         return items;
@@ -454,6 +458,7 @@ final class NbtBridge {
     private Object parseItem(Object tag) throws Exception {
         Field lastErrorCodec = null;
         Exception lastError = null;
+        String lastErrorMessage = null;
         for (Field codecField : itemCodecFields) {
             try {
                 Object codec = codecField.get(null);
@@ -463,13 +468,23 @@ final class NbtBridge {
                     selectedItemCodecField = codecField;
                     return optional.get();
                 }
+                Optional<?> error = (Optional<?>) dataErrorMethod.invoke(dataResult);
+                if (error.isPresent()) {
+                    lastErrorCodec = codecField;
+                    lastErrorMessage = String.valueOf(error.get());
+                }
             } catch (Exception e) {
                 lastErrorCodec = codecField;
                 lastError = e;
+                lastErrorMessage = unwrapThrowable(e).getMessage();
             }
         }
         if (lastError != null) {
             throw new IllegalStateException("无法通过 ItemStack Codec 解析物品: " + lastErrorCodec.getName(), lastError);
+        }
+        if (lastErrorCodec != null) {
+            throw new IllegalStateException("无法从 NBT 解析物品: " + lastErrorCodec.getName() +
+                    (lastErrorMessage == null || lastErrorMessage.isBlank() ? "" : " - " + lastErrorMessage));
         }
         throw new IllegalStateException("无法从 NBT 解析物品");
     }
@@ -534,7 +549,29 @@ final class NbtBridge {
         if (itemTag == null) {
             return;
         }
-        items[slot] = fromTag(itemTag);
+        items[slot] = readItemSafely(itemTag, "装备槽 " + key);
+    }
+
+    private ItemStack readItemSafely(Object tag, String slotName) {
+        try {
+            return fromTag(tag);
+        } catch (Exception e) {
+            Throwable root = unwrapThrowable(e);
+            String message = root.getMessage();
+            XLogger.warn("跳过无法解析的离线物品: {0} | {1}{2}",
+                    slotName,
+                    root.getClass().getSimpleName(),
+                    message == null || message.isBlank() ? "" : " - " + message);
+            return null;
+        }
+    }
+
+    private static Throwable unwrapThrowable(Throwable throwable) {
+        Throwable current = throwable;
+        while (current.getCause() != null && current != current.getCause()) {
+            current = current.getCause();
+        }
+        return current;
     }
 
     private static boolean optionalGenericMatches(Method method, Class<?> targetType) {

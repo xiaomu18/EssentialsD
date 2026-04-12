@@ -36,7 +36,7 @@ final class OfflineInspectDataSource implements InspectDataSource {
             return new OfflineInspectDataSource(mode, InspectManager.displayName(player), snapshot);
         } catch (Exception e) {
             XLogger.error("读取离线检查数据失败: " + player.getUniqueId());
-            XLogger.error(e);
+            logLoadFailure(e);
             return null;
         }
     }
@@ -102,5 +102,19 @@ final class OfflineInspectDataSource implements InspectDataSource {
             return null;
         }
         return world.getWorldFolder().toPath().resolve("playerdata").resolve(uuid + ".dat");
+    }
+
+    private static void logLoadFailure(Throwable throwable) {
+        Throwable current = throwable;
+        int depth = 0;
+        while (current != null && depth < 5) {
+            String message = current.getMessage();
+            XLogger.error("离线检查异常[{0}]: {1}{2}",
+                    depth,
+                    current.getClass().getSimpleName(),
+                    message == null || message.isBlank() ? "" : " - " + message);
+            current = current.getCause();
+            depth++;
+        }
     }
 }
