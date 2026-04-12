@@ -15,32 +15,56 @@ public class Tpa implements CommandExecutor {
         if (!(sender instanceof Player)) {
             Notification.warn(sender, "只有玩家可以使用此命令");
             return true;
-        } else {
-            Player player = (Player) sender;
-            if (args.length == 1) {
-                Player target = EssentialsD.instance.getServer().getPlayer(args[0]);
-                if (target == null || EssentialsD.vanishManager.isHiddenFrom(player, target)) {
-                    Notification.warn(player, "玩家 %s 不在线", args[0]);
-                    return true;
-                } else {
-                    EssentialsD.tpManager.tpaRequest(player, target);
-                    return true;
-                }
-            } else if (args.length == 2) {
-                if (args[0].equals("accept")) {
-                    EssentialsD.tpManager.accept(player, UUID.fromString(args[1]));
-                    return true;
-                } else if (args[0].equals("deny")) {
-                    EssentialsD.tpManager.deny(player, UUID.fromString(args[1]));
-                    return true;
-                } else {
-                    Notification.error(player, "参数错误");
-                    return false;
-                }
-            } else {
-                Notification.error(player, "参数错误");
-                return false;
+        }
+
+        Player player = (Player) sender;
+        if (args.length == 1) {
+            if (isActionArgument(args[0])) {
+                Notification.error(player, "用法: /tpa <player> 或 /tpa <accept|deny> <请求ID>");
+                return true;
             }
+            Player target = EssentialsD.instance.getServer().getPlayer(args[0]);
+            if (target == null || EssentialsD.vanishManager.isHiddenFrom(player, target)) {
+                Notification.warn(player, "玩家 %s 不在线", args[0]);
+                return true;
+            }
+            EssentialsD.tpManager.tpaRequest(player, target);
+            return true;
+        }
+
+        if (args.length == 2) {
+            if ("accept".equalsIgnoreCase(args[0])) {
+                UUID taskId = parseTaskId(player, args[1]);
+                if (taskId == null) {
+                    return true;
+                }
+                EssentialsD.tpManager.accept(player, taskId);
+                return true;
+            }
+            if ("deny".equalsIgnoreCase(args[0])) {
+                UUID taskId = parseTaskId(player, args[1]);
+                if (taskId == null) {
+                    return true;
+                }
+                EssentialsD.tpManager.deny(player, taskId);
+                return true;
+            }
+        }
+
+        Notification.error(player, "用法: /tpa <player> 或 /tpa <accept|deny> <请求ID>");
+        return true;
+    }
+
+    private boolean isActionArgument(String arg) {
+        return "accept".equalsIgnoreCase(arg) || "deny".equalsIgnoreCase(arg);
+    }
+
+    private UUID parseTaskId(Player player, String rawTaskId) {
+        try {
+            return UUID.fromString(rawTaskId);
+        } catch (IllegalArgumentException ignored) {
+            Notification.error(player, "无效的传送请求 ID");
+            return null;
         }
     }
 }

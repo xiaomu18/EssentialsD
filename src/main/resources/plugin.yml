@@ -23,6 +23,8 @@ permissions:
       essd.god: true
       essd.fly: true
       essd.fly.other: true
+      essd.flyspeed: true
+      essd.flyspeed.other: true
       essd.sit: true
       essd.save: true
       essd.more: true
@@ -69,6 +71,10 @@ permissions:
   essd.fly:
     default: op
   essd.fly.other:
+    default: false
+  essd.flyspeed:
+    default: op
+  essd.flyspeed.other:
     default: false
   essd.sit:
     default: true
@@ -162,6 +168,10 @@ commands:
     description: Toggle flight
     usage: /fly [player]
     permission: essd.fly
+  flyspeed:
+    description: Set fly speed
+    usage: /flyspeed <reset|speed> [player]
+    permission: essd.flyspeed
   sit:
     description: Sit down in place
     usage: /sit

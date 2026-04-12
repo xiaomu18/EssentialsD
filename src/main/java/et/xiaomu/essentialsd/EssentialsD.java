@@ -81,6 +81,7 @@ public final class EssentialsD extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new VanishEvent(), this);
 
         commands.put("fly", new Fly());
+        commands.put("flyspeed", new FlySpeed());
         commands.put("god", new God());
         commands.put("save", new Save());
         commands.put("heal", new Heal());
