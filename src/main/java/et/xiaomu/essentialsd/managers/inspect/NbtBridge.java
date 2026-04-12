@@ -260,6 +260,7 @@ final class NbtBridge {
 
     private static Object createUnlimitedAccounter() throws Exception {
         Class<?> accounterClass = Class.forName("net.minecraft.nbt.NbtAccounter");
+        Method fallbackNoArgFactory = null;
         for (Method method : accounterClass.getMethods()) {
             if (!java.lang.reflect.Modifier.isStatic(method.getModifiers())) {
                 continue;
@@ -270,8 +271,40 @@ final class NbtBridge {
             if (!accounterClass.isAssignableFrom(method.getReturnType())) {
                 continue;
             }
+            if (method.getName().toLowerCase(java.util.Locale.ROOT).contains("unlimited")) {
+                method.setAccessible(true);
+                return method.invoke(null);
+            }
+            if (fallbackNoArgFactory == null) {
+                fallbackNoArgFactory = method;
+            }
+        }
+        for (Method method : accounterClass.getMethods()) {
+            if (!java.lang.reflect.Modifier.isStatic(method.getModifiers())) {
+                continue;
+            }
+            if (method.getParameterCount() != 1) {
+                continue;
+            }
+            if (!accounterClass.isAssignableFrom(method.getReturnType())) {
+                continue;
+            }
+            Class<?> parameterType = method.getParameterTypes()[0];
+            if (parameterType != long.class && parameterType != Long.class) {
+                continue;
+            }
             method.setAccessible(true);
-            return method.invoke(null);
+            return method.invoke(null, Long.MAX_VALUE);
+        }
+        try {
+            Constructor<?> constructor = accounterClass.getDeclaredConstructor(long.class);
+            constructor.setAccessible(true);
+            return constructor.newInstance(Long.MAX_VALUE);
+        } catch (NoSuchMethodException ignored) {
+        }
+        if (fallbackNoArgFactory != null) {
+            fallbackNoArgFactory.setAccessible(true);
+            return fallbackNoArgFactory.invoke(null);
         }
         throw new NoSuchMethodException("NbtAccounter unlimited factory");
     }
