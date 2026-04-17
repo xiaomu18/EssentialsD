@@ -104,7 +104,7 @@ public final class VanishProtocolEnhancer {
                     return;
                 }
                 if (PacketType.Play.Server.PLAYER_INFO_REMOVE.equals(type)) {
-                    filterPlayerInfoRemovePacket(event, packet);
+                    filterPlayerInfoRemovePacket(event, packet, receiver);
                     return;
                 }
                 if (PacketType.Play.Server.SPAWN_ENTITY.equals(type)) {
@@ -114,9 +114,7 @@ public final class VanishProtocolEnhancer {
                     return;
                 }
                 if (PacketType.Play.Server.ENTITY_DESTROY.equals(type)) {
-                    if (containsVanishedEntityId(readDestroyEntityIds(packet))) {
-                        event.setCancelled(true);
-                    }
+                    filterEntityDestroyPacket(event, packet, receiver);
                     return;
                 }
                 if (PacketType.Play.Server.MOUNT.equals(type)) {
@@ -198,7 +196,7 @@ public final class VanishProtocolEnhancer {
         playerInfoDataLists.write(0, filtered);
     }
 
-    private void filterPlayerInfoRemovePacket(PacketEvent event, PacketContainer packet) {
+    private void filterPlayerInfoRemovePacket(PacketEvent event, PacketContainer packet, Player receiver) {
         StructureModifier<List<UUID>> uuidLists = packet.getUUIDLists();
         if (uuidLists.size() == 0) {
             return;
@@ -208,9 +206,10 @@ public final class VanishProtocolEnhancer {
             return;
         }
 
+        UUID receiverId = receiver.getUniqueId();
         List<UUID> filtered = new ArrayList<>(original.size());
         for (UUID uuid : original) {
-            if (uuid == null || !vanishManager.isPacketVanishedUuid(uuid)) {
+            if (!shouldFilterPlayerInfoRemoveEntry(receiverId, uuid)) {
                 filtered.add(uuid);
             }
         }
@@ -223,6 +222,82 @@ public final class VanishProtocolEnhancer {
             return;
         }
         uuidLists.write(0, filtered);
+    }
+
+    private boolean shouldFilterPlayerInfoRemoveEntry(UUID receiverId, UUID targetUuid) {
+        if (targetUuid == null || !vanishManager.isPacketVanishedUuid(targetUuid)) {
+            return false;
+        }
+        return !vanishManager.consumePendingPlayerInfoRemove(receiverId, targetUuid);
+    }
+
+    private void filterEntityDestroyPacket(PacketEvent event, PacketContainer packet, Player receiver) {
+        UUID receiverId = receiver.getUniqueId();
+
+        StructureModifier<List<Integer>> intLists = packet.getIntLists();
+        if (intLists.size() > 0) {
+            List<Integer> ids = intLists.read(0);
+            if (ids != null && !ids.isEmpty()) {
+                List<Integer> filtered = filterDestroyEntityIds(receiverId, ids);
+                applyFilteredEntityDestroyList(event, intLists, ids, filtered);
+                return;
+            }
+        }
+
+        StructureModifier<int[]> integerArrays = packet.getIntegerArrays();
+        if (integerArrays.size() > 0) {
+            int[] ids = integerArrays.read(0);
+            if (ids != null && ids.length > 0) {
+                List<Integer> original = new ArrayList<>(ids.length);
+                for (int id : ids) {
+                    original.add(id);
+                }
+                List<Integer> filtered = filterDestroyEntityIds(receiverId, original);
+                if (filtered.size() == original.size()) {
+                    return;
+                }
+                if (filtered.isEmpty()) {
+                    event.setCancelled(true);
+                    return;
+                }
+                int[] rewritten = new int[filtered.size()];
+                for (int i = 0; i < filtered.size(); i++) {
+                    rewritten[i] = filtered.get(i);
+                }
+                integerArrays.write(0, rewritten);
+            }
+        }
+    }
+
+    private List<Integer> filterDestroyEntityIds(UUID receiverId, Collection<Integer> entityIds) {
+        List<Integer> filtered = new ArrayList<>();
+        for (Integer entityId : entityIds) {
+            if (!shouldFilterEntityDestroyEntry(receiverId, entityId)) {
+                filtered.add(entityId);
+            }
+        }
+        return filtered;
+    }
+
+    private boolean shouldFilterEntityDestroyEntry(UUID receiverId, Integer entityId) {
+        if (entityId == null || !vanishManager.isPacketVanishedEntityId(entityId)) {
+            return false;
+        }
+        return !vanishManager.consumePendingEntityDestroy(receiverId, entityId);
+    }
+
+    private void applyFilteredEntityDestroyList(PacketEvent event,
+                                                StructureModifier<List<Integer>> intLists,
+                                                List<Integer> original,
+                                                List<Integer> filtered) {
+        if (filtered.size() == original.size()) {
+            return;
+        }
+        if (filtered.isEmpty()) {
+            event.setCancelled(true);
+            return;
+        }
+        intLists.write(0, filtered);
     }
 
     private UUID extractProfileUuid(PlayerInfoData data) {
@@ -250,29 +325,6 @@ public final class VanishProtocolEnhancer {
             return null;
         }
         return integers.read(index);
-    }
-
-    private Collection<Integer> readDestroyEntityIds(PacketContainer packet) {
-        StructureModifier<List<Integer>> intLists = packet.getIntLists();
-        if (intLists.size() > 0) {
-            List<Integer> ids = intLists.read(0);
-            if (ids != null) {
-                return ids;
-            }
-        }
-
-        StructureModifier<int[]> integerArrays = packet.getIntegerArrays();
-        if (integerArrays.size() > 0) {
-            int[] ids = integerArrays.read(0);
-            if (ids != null && ids.length > 0) {
-                List<Integer> result = new ArrayList<>(ids.length);
-                for (int id : ids) {
-                    result.add(id);
-                }
-                return result;
-            }
-        }
-        return readAllIntegers(packet);
     }
 
     private Collection<Integer> readMountEntityIds(PacketContainer packet) {

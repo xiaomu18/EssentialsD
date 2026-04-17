@@ -45,9 +45,13 @@ public class VanishManager {
     private final Set<UUID> packetVanishedUuids = ConcurrentHashMap.newKeySet();
     private final Set<Integer> packetVanishedEntityIds = ConcurrentHashMap.newKeySet();
     private final Map<UUID, Integer> packetVanishedEntityIdByUuid = new ConcurrentHashMap<>();
+    private final Map<Integer, Long> recentPacketVanishedEntityIds = new ConcurrentHashMap<>();
+    private final Map<UUID, Map<UUID, Long>> pendingPlayerInfoRemoveByViewer = new ConcurrentHashMap<>();
+    private final Map<UUID, Map<Integer, Long>> pendingEntityDestroyByViewer = new ConcurrentHashMap<>();
     private final Map<UUID, SilentContainerSession> silentContainerSessions = new ConcurrentHashMap<>();
     private final BossBar bossBar = Bukkit.createBossBar("§7你正处于隐身状态", BarColor.WHITE, BarStyle.SEGMENTED_6);
     private VanishProtocolEnhancer protocolEnhancer;
+    private static final long PENDING_REMOVE_TTL_MS = 5000L;
 
     public VanishManager() {
         bootstrapPersistedManualState();
@@ -83,11 +87,28 @@ public class VanishManager {
     }
 
     public boolean isPacketVanishedEntityId(int entityId) {
-        return packetVanishedEntityIds.contains(entityId);
+        if (packetVanishedEntityIds.contains(entityId)) {
+            return true;
+        }
+        return isRecentPacketVanishedEntityId(entityId);
     }
 
     public boolean isPacketVanishedUuid(UUID uuid) {
         return packetVanishedUuids.contains(uuid);
+    }
+
+    public boolean consumePendingPlayerInfoRemove(UUID viewerId, UUID targetUuid) {
+        if (viewerId == null || targetUuid == null) {
+            return false;
+        }
+        return consumePending(pendingPlayerInfoRemoveByViewer, viewerId, targetUuid);
+    }
+
+    public boolean consumePendingEntityDestroy(UUID viewerId, int entityId) {
+        if (viewerId == null || entityId <= 0) {
+            return false;
+        }
+        return consumePending(pendingEntityDestroyByViewer, viewerId, entityId);
     }
 
     public boolean isHiddenFrom(Player viewer, Player target) {
@@ -179,6 +200,7 @@ public class VanishManager {
     public void handleLogin(Player player) {
         restoreManualState(player);
         // 登录阶段仅刷新状态与可见性，不触发实体属性读写。
+        // 注意：部分服务端在 Login 阶段 GameMode 可能尚未恢复，Join 阶段会再做一次强制隐身判定兜底。
         refreshForcedState(player, player.getGameMode(), false, false);
         // 明确在 PlayerLoginEvent 阶段设置 VisibleByDefault。
         applyVisibleByDefaultState(player, isVanished(player));
@@ -187,9 +209,10 @@ public class VanishManager {
     }
 
     public void handleJoin(Player player) {
+        // Join 阶段再次基于最终 GameMode 判定强制隐身，修复“首次加入非默认模式未触发强制隐身”问题。
+        refreshForcedState(player, player.getGameMode(), false, true);
         boolean vanished = isVanished(player);
-        // Join 阶段兜底一次，避免其他插件在登录链路后覆盖隐身属性或可见性。
-        applyVanishState(player, vanished);
+        // Join 阶段兜底刷新一次可见性，避免其他插件在登录链路后覆盖 hide/show 状态。
         refreshVisibilityFor(player);
         if (vanished) {
             Notification.warn(player, isForced(player.getUniqueId()) ? "你当前处于强制隐身状态" : "你仍处于隐身状态");
@@ -197,9 +220,13 @@ public class VanishManager {
     }
 
     public void handleQuit(Player player) {
+        UUID playerId = player.getUniqueId();
+        if (isVanished(playerId)) {
+            markRecentPacketVanishedEntityId(player.getEntityId());
+        }
         closeSilentContainerSession(player, null);
         updatePacketTrackedState(player, false);
-        UUID playerId = player.getUniqueId();
+        clearPendingRemovalForPlayer(playerId, player.getEntityId());
         forcedVanished.remove(playerId);
         vanishInvulnerable.remove(playerId);
         vanishSilenced.remove(playerId);
@@ -323,6 +350,9 @@ public class VanishManager {
         packetVanishedUuids.clear();
         packetVanishedEntityIds.clear();
         packetVanishedEntityIdByUuid.clear();
+        recentPacketVanishedEntityIds.clear();
+        pendingPlayerInfoRemoveByViewer.clear();
+        pendingEntityDestroyByViewer.clear();
         silentContainerSessions.clear();
     }
 
@@ -355,8 +385,12 @@ public class VanishManager {
             return;
         }
         if (isHiddenFrom(viewer, target)) {
+            if (viewer.canSee(target)) {
+                markPendingRemoval(viewer, target);
+            }
             viewer.hidePlayer(EssentialsD.instance, target);
         } else {
+            clearPendingRemoval(viewer.getUniqueId(), target.getUniqueId(), target.getEntityId());
             viewer.showPlayer(EssentialsD.instance, target);
         }
     }
@@ -520,6 +554,88 @@ public class VanishManager {
             protocolEnhancer = new VanishProtocolEnhancer(EssentialsD.instance, this);
         }
         protocolEnhancer.enable();
+    }
+
+    private void markPendingRemoval(Player viewer, Player target) {
+        UUID viewerId = viewer.getUniqueId();
+        UUID targetId = target.getUniqueId();
+        long expiresAt = System.currentTimeMillis() + PENDING_REMOVE_TTL_MS;
+        pendingPlayerInfoRemoveByViewer
+                .computeIfAbsent(viewerId, ignored -> new ConcurrentHashMap<>())
+                .put(targetId, expiresAt);
+        int entityId = target.getEntityId();
+        if (entityId > 0) {
+            pendingEntityDestroyByViewer
+                    .computeIfAbsent(viewerId, ignored -> new ConcurrentHashMap<>())
+                    .put(entityId, expiresAt);
+        }
+    }
+
+    private void clearPendingRemovalForPlayer(UUID playerId, int entityId) {
+        pendingPlayerInfoRemoveByViewer.remove(playerId);
+        pendingEntityDestroyByViewer.remove(playerId);
+        for (Map<UUID, Long> map : pendingPlayerInfoRemoveByViewer.values()) {
+            map.remove(playerId);
+        }
+        if (entityId > 0) {
+            for (Map<Integer, Long> map : pendingEntityDestroyByViewer.values()) {
+                map.remove(entityId);
+            }
+        }
+    }
+
+    private void clearPendingRemoval(UUID viewerId, UUID targetId, int entityId) {
+        Map<UUID, Long> uuidMap = pendingPlayerInfoRemoveByViewer.get(viewerId);
+        if (uuidMap != null) {
+            uuidMap.remove(targetId);
+            if (uuidMap.isEmpty()) {
+                pendingPlayerInfoRemoveByViewer.remove(viewerId, uuidMap);
+            }
+        }
+        if (entityId > 0) {
+            Map<Integer, Long> entityMap = pendingEntityDestroyByViewer.get(viewerId);
+            if (entityMap != null) {
+                entityMap.remove(entityId);
+                if (entityMap.isEmpty()) {
+                    pendingEntityDestroyByViewer.remove(viewerId, entityMap);
+                }
+            }
+        }
+    }
+
+    private <K> boolean consumePending(Map<UUID, Map<K, Long>> pendingByViewer, UUID viewerId, K targetKey) {
+        Map<K, Long> pending = pendingByViewer.get(viewerId);
+        if (pending == null) {
+            return false;
+        }
+        Long expiresAt = pending.get(targetKey);
+        if (expiresAt == null) {
+            return false;
+        }
+        pending.remove(targetKey);
+        if (pending.isEmpty()) {
+            pendingByViewer.remove(viewerId, pending);
+        }
+        return expiresAt >= System.currentTimeMillis();
+    }
+
+    private void markRecentPacketVanishedEntityId(int entityId) {
+        if (entityId <= 0) {
+            return;
+        }
+        recentPacketVanishedEntityIds.put(entityId, System.currentTimeMillis() + PENDING_REMOVE_TTL_MS);
+    }
+
+    private boolean isRecentPacketVanishedEntityId(int entityId) {
+        Long expiresAt = recentPacketVanishedEntityIds.get(entityId);
+        if (expiresAt == null) {
+            return false;
+        }
+        if (expiresAt < System.currentTimeMillis()) {
+            recentPacketVanishedEntityIds.remove(entityId, expiresAt);
+            return false;
+        }
+        return true;
     }
 
     private record SilentContainerSession(Inventory sourceInventory, Inventory mirrorInventory) {

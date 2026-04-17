@@ -29,10 +29,10 @@ public class VanishEvent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerJoin(PlayerJoinEvent event) {
+        EssentialsD.vanishManager.handleJoin(event.getPlayer());
         if (EssentialsD.vanishManager.isVanished(event.getPlayer().getUniqueId())) {
             event.joinMessage(null);
         }
-        EssentialsD.vanishManager.handleJoin(event.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
