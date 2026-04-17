@@ -128,10 +128,14 @@ public class VanishManager {
     }
 
     public boolean refreshForcedState(Player player, boolean notify) {
-        return refreshForcedState(player, player.getGameMode(), notify);
+        return refreshForcedState(player, player.getGameMode(), notify, true);
     }
 
     public boolean refreshForcedState(Player player, GameMode mode, boolean notify) {
+        return refreshForcedState(player, mode, notify, true);
+    }
+
+    private boolean refreshForcedState(Player player, GameMode mode, boolean notify, boolean applyRuntimeState) {
         UUID playerId = player.getUniqueId();
         boolean shouldForce = EssentialsD.config.getForceVanishInDifferentGamemode()
                 && mode != Bukkit.getDefaultGameMode();
@@ -150,11 +154,14 @@ public class VanishManager {
         }
         boolean isVanished = isVanished(playerId);
 
-        if (wasVanished != isVanished) {
+        if (applyRuntimeState) {
             applyVanishState(player, isVanished);
-            refreshVisibilityForTarget(player);
         } else {
-            applyVanishState(player, isVanished);
+            updatePacketTrackedState(player, isVanished);
+        }
+
+        if (wasVanished != isVanished) {
+            refreshVisibilityForTarget(player);
         }
 
         if (notify && forcedChanged) {
@@ -171,9 +178,8 @@ public class VanishManager {
 
     public void handleLogin(Player player) {
         restoreManualState(player);
-        // 在登录阶段尽早预热包拦截缓存，降低加入过程中的数据包泄露窗口。
-        updatePacketTrackedState(player, isVanished(player));
-        refreshForcedState(player, false);
+        // 登录阶段仅刷新状态与可见性，不触发实体属性读写。
+        refreshForcedState(player, player.getGameMode(), false, false);
         // 明确在 PlayerLoginEvent 阶段设置 VisibleByDefault。
         applyVisibleByDefaultState(player, isVanished(player));
         // 在玩家真正加入前完成可见性同步，降低隐身泄露窗口。
