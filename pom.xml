@@ -50,6 +50,12 @@
             <version>5.6.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>net.dmulloy2</groupId>
+            <artifactId>ProtocolLib</artifactId>
+            <version>5.4.0</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>

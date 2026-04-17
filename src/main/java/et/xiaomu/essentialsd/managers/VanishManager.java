@@ -1,7 +1,9 @@
 package et.xiaomu.essentialsd.managers;
 
 import cn.lunadeer.utils.Notification;
+import cn.lunadeer.utils.XLogger;
 import et.xiaomu.essentialsd.EssentialsD;
+import et.xiaomu.essentialsd.dtos.VanishState;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.block.Block;
@@ -40,8 +42,17 @@ public class VanishManager {
     private final Set<UUID> vanishSilenced = ConcurrentHashMap.newKeySet();
     private final Set<UUID> vanishNoCollidable = ConcurrentHashMap.newKeySet();
     private final Set<UUID> vanishVisibleByDefaultOff = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> packetVanishedUuids = ConcurrentHashMap.newKeySet();
+    private final Set<Integer> packetVanishedEntityIds = ConcurrentHashMap.newKeySet();
+    private final Map<UUID, Integer> packetVanishedEntityIdByUuid = new ConcurrentHashMap<>();
     private final Map<UUID, SilentContainerSession> silentContainerSessions = new ConcurrentHashMap<>();
     private final BossBar bossBar = Bukkit.createBossBar("§7你正处于隐身状态", BarColor.WHITE, BarStyle.SEGMENTED_6);
+    private VanishProtocolEnhancer protocolEnhancer;
+
+    public VanishManager() {
+        bootstrapPersistedManualState();
+        refreshEnhancedModeState();
+    }
 
     public boolean isVanished(UUID playerId) {
         return manualVanished.contains(playerId) || forcedVanished.contains(playerId);
@@ -55,6 +66,10 @@ public class VanishManager {
         return forcedVanished.contains(playerId);
     }
 
+    public boolean isManualVanished(UUID playerId) {
+        return manualVanished.contains(playerId);
+    }
+
     public boolean canSeeVanished(CommandSender sender) {
         return sender.hasPermission(PERMISSION_SEE);
     }
@@ -65,6 +80,14 @@ public class VanishManager {
 
     public boolean canTpahereWhileVanished(Player player) {
         return player.hasPermission(PERMISSION_TPAHERE);
+    }
+
+    public boolean isPacketVanishedEntityId(int entityId) {
+        return packetVanishedEntityIds.contains(entityId);
+    }
+
+    public boolean isPacketVanishedUuid(UUID uuid) {
+        return packetVanishedUuids.contains(uuid);
     }
 
     public boolean isHiddenFrom(Player viewer, Player target) {
@@ -81,12 +104,24 @@ public class VanishManager {
 
         boolean wasVanished = isVanished(playerId);
         boolean changed = vanished ? manualVanished.add(playerId) : manualVanished.remove(playerId);
+        if (!changed) {
+            return false;
+        }
+        if (!VanishState.setManualVanished(playerId, vanished)) {
+            if (vanished) {
+                manualVanished.remove(playerId);
+            } else {
+                manualVanished.add(playerId);
+            }
+            XLogger.warn("玩家 %s 的隐身持久化状态写入失败，本次切换已回滚", player.getName());
+            return false;
+        }
         boolean isVanished = isVanished(playerId);
 
         if (wasVanished != isVanished) {
             applyVanishState(player, isVanished);
             refreshVisibilityForTarget(player);
-        } else if (isVanished && changed) {
+        } else if (isVanished) {
             applyVanishState(player, true);
         }
         return changed;
@@ -103,7 +138,16 @@ public class VanishManager {
         boolean wasVanished = isVanished(playerId);
         boolean forcedChanged = shouldForce ? forcedVanished.add(playerId) : forcedVanished.remove(playerId);
         // 强制隐身只负责自动开启，不负责自动关闭。
-        boolean autoEnabledByForce = shouldForce && manualVanished.add(playerId);
+        boolean autoEnabledByForce = false;
+        if (shouldForce && !manualVanished.contains(playerId)) {
+            manualVanished.add(playerId);
+            if (VanishState.setManualVanished(playerId, true)) {
+                autoEnabledByForce = true;
+            } else {
+                manualVanished.remove(playerId);
+                XLogger.warn("玩家 %s 被强制隐身时写入持久化失败，当前会话仍保持强制隐身", player.getName());
+            }
+        }
         boolean isVanished = isVanished(playerId);
 
         if (wasVanished != isVanished) {
@@ -126,6 +170,9 @@ public class VanishManager {
     }
 
     public void handleLogin(Player player) {
+        restoreManualState(player);
+        // 在登录阶段尽早预热包拦截缓存，降低加入过程中的数据包泄露窗口。
+        updatePacketTrackedState(player, isVanished(player));
         refreshForcedState(player, false);
         // 明确在 PlayerLoginEvent 阶段设置 VisibleByDefault。
         applyVisibleByDefaultState(player, isVanished(player));
@@ -145,6 +192,7 @@ public class VanishManager {
 
     public void handleQuit(Player player) {
         closeSilentContainerSession(player, null);
+        updatePacketTrackedState(player, false);
         UUID playerId = player.getUniqueId();
         forcedVanished.remove(playerId);
         vanishInvulnerable.remove(playerId);
@@ -187,12 +235,20 @@ public class VanishManager {
     }
 
     public void reload() {
+        refreshEnhancedModeState();
         for (Player player : new ArrayList<>(Bukkit.getOnlinePlayers())) {
+            restoreManualState(player);
+            updatePacketTrackedState(player, isVanished(player));
             refreshForcedState(player, true);
         }
     }
 
     public void shutdown() {
+        if (protocolEnhancer != null) {
+            protocolEnhancer.shutdown();
+            protocolEnhancer = null;
+        }
+
         List<Player> onlinePlayers = new ArrayList<>(Bukkit.getOnlinePlayers());
 
         for (UUID playerId : new ArrayList<>(vanishInvulnerable)) {
@@ -258,6 +314,9 @@ public class VanishManager {
         vanishSilenced.clear();
         vanishNoCollidable.clear();
         vanishVisibleByDefaultOff.clear();
+        packetVanishedUuids.clear();
+        packetVanishedEntityIds.clear();
+        packetVanishedEntityIdByUuid.clear();
         silentContainerSessions.clear();
     }
 
@@ -321,6 +380,7 @@ public class VanishManager {
             } else if (vanishNoCollidable.remove(playerId)) {
                 player.setCollidable(true);
             }
+            updatePacketTrackedState(player, true);
             return;
         }
 
@@ -335,6 +395,7 @@ public class VanishManager {
             player.setCollidable(true);
         }
         applyVisibleByDefaultState(player, false);
+        updatePacketTrackedState(player, false);
     }
 
     private void applyVisibleByDefaultState(Player player, boolean vanished) {
@@ -385,6 +446,74 @@ public class VanishManager {
             cloned[i] = contents[i] == null ? null : contents[i].clone();
         }
         return cloned;
+    }
+
+    private void bootstrapPersistedManualState() {
+        List<UUID> persisted = VanishState.getAllManualVanished();
+        if (persisted.isEmpty()) {
+            return;
+        }
+        manualVanished.addAll(persisted);
+        // 提前把持久化隐身 UUID 放入包过滤缓存，减少加入阶段的泄露风险。
+        packetVanishedUuids.addAll(persisted);
+    }
+
+    private void restoreManualState(Player player) {
+        UUID playerId = player.getUniqueId();
+        Boolean persisted = VanishState.isManualVanished(playerId);
+        if (persisted == null) {
+            XLogger.warn("玩家 %s 的隐身持久化状态读取失败，保留当前内存状态", player.getName());
+            return;
+        }
+        if (persisted) {
+            manualVanished.add(playerId);
+            return;
+        }
+        manualVanished.remove(playerId);
+    }
+
+    private void updatePacketTrackedState(Player player, boolean vanished) {
+        UUID playerId = player.getUniqueId();
+        Integer oldEntityId = packetVanishedEntityIdByUuid.remove(playerId);
+        if (oldEntityId != null) {
+            packetVanishedEntityIds.remove(oldEntityId);
+        }
+        if (!vanished) {
+            if (manualVanished.contains(playerId)) {
+                packetVanishedUuids.add(playerId);
+            } else {
+                packetVanishedUuids.remove(playerId);
+            }
+            return;
+        }
+
+        packetVanishedUuids.add(playerId);
+        int entityId = player.getEntityId();
+        if (entityId > 0) {
+            packetVanishedEntityIdByUuid.put(playerId, entityId);
+            packetVanishedEntityIds.add(entityId);
+        }
+    }
+
+    private void refreshEnhancedModeState() {
+        boolean enhancedMode = Boolean.TRUE.equals(EssentialsD.config.getVanishEnhancedMode());
+        boolean protocolLibEnabled = Bukkit.getPluginManager().isPluginEnabled("ProtocolLib");
+
+        if (!enhancedMode || !protocolLibEnabled) {
+            if (protocolEnhancer != null) {
+                protocolEnhancer.shutdown();
+                protocolEnhancer = null;
+            }
+            if (enhancedMode) {
+                XLogger.warn("配置 vanish.enhanced-mode=true，但未检测到 ProtocolLib，增强模式不会生效");
+            }
+            return;
+        }
+
+        if (protocolEnhancer == null) {
+            protocolEnhancer = new VanishProtocolEnhancer(EssentialsD.instance, this);
+        }
+        protocolEnhancer.enable();
     }
 
     private record SilentContainerSession(Inventory sourceInventory, Inventory mirrorInventory) {

@@ -48,6 +48,7 @@ public class ConfigManager {
     private Boolean _force_vanish_in_different_gamemode;
     private Boolean _vanish_disable_collidable;
     private Boolean _vanish_cancel_container_animation;
+    private Boolean _vanish_enhanced_mode;
     public Boolean chat_func_enable;
     public List<String> forbidWords;
     public Map<String, String> replaceWords;
@@ -117,6 +118,7 @@ public class ConfigManager {
             this._vanish_disable_collidable = this._file.getBoolean("Vanish.DisableCollidable", true);
         }
         this._vanish_cancel_container_animation = this._file.getBoolean("vanish.cancel-container-animation", false);
+        this._vanish_enhanced_mode = this._file.getBoolean("vanish.enhanced-mode", false);
 
         this.chat_func_enable = this._file.getBoolean("chat.Enable", false);
         this.allow_minimessage_perm = this._file.getString("chat.allow-minimessage-perm", "essd.chat.allow-use-minimessage");
@@ -421,5 +423,9 @@ public class ConfigManager {
 
     public Boolean getVanishCancelContainerAnimation() {
         return this._vanish_cancel_container_animation;
+    }
+
+    public Boolean getVanishEnhancedMode() {
+        return this._vanish_enhanced_mode;
     }
 }

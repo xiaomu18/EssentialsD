@@ -23,5 +23,7 @@ public class DatabaseTables {
         EssentialsD.database.query(sql);
         sql = "CREATE TABLE IF NOT EXISTS warp_point ( id                SERIAL PRIMARY KEY, warp_name         TEXT NOT NULL, location          TEXT NOT NULL);";
         EssentialsD.database.query(sql);
+        sql = "CREATE TABLE IF NOT EXISTS vanish_state ( uuid              VARCHAR(36) NOT NULL UNIQUE PRIMARY KEY, updated_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP );";
+        EssentialsD.database.query(sql);
     }
 }

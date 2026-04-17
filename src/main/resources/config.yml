@@ -57,6 +57,9 @@ vanish:
   disable-collidable: true            # 隐身时关闭碰撞，防止推动实体
   cancel-container-animation: false   # 隐身玩家打开带开合动画的容器时，改为无动画打开（对所有观察者生效）
 
+  # 需安装 ProtocolLib。底层数据包级补充增强隐身方案，防止作弊客户端获取到隐身玩家信息
+  enhanced-mode: false
+
 # 聊天功能 (需要安装 PlaceholderAPI)
 chat:
   Enable: false

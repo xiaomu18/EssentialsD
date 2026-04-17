@@ -115,10 +115,14 @@ public class Vanish implements TabExecutor {
 
         boolean changed = EssentialsD.vanishManager.setManualVanished(target, enable);
         if (!changed) {
-            if (enable) {
-                Notification.warn(sender, "%s 已经处于隐身状态", sender.equals(target) ? "你" : target.getName());
+            if (EssentialsD.vanishManager.isManualVanished(target.getUniqueId()) == enable) {
+                if (enable) {
+                    Notification.warn(sender, "%s 已经处于隐身状态", sender.equals(target) ? "你" : target.getName());
+                } else {
+                    Notification.warn(sender, "%s 当前未处于可关闭的隐身状态", sender.equals(target) ? "你" : target.getName());
+                }
             } else {
-                Notification.warn(sender, "%s 当前未处于可关闭的隐身状态", sender.equals(target) ? "你" : target.getName());
+                Notification.error(sender, "隐身状态写入数据库失败，请查看后台日志");
             }
             return true;
         }

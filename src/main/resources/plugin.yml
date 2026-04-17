@@ -11,6 +11,7 @@ softdepend:
   - LuckPerms
   - PlaceholderAPI
   - AuthMe
+  - ProtocolLib
 
 permissions:
   essd.*:
