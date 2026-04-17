@@ -46,6 +46,8 @@ public class ConfigManager {
     private String _db_pass;
     private String _db_name;
     private Boolean _force_vanish_in_different_gamemode;
+    private Boolean _vanish_disable_collidable;
+    private Boolean _vanish_cancel_container_animation;
     public Boolean chat_func_enable;
     public List<String> forbidWords;
     public Map<String, String> replaceWords;
@@ -104,7 +106,17 @@ public class ConfigManager {
         if (this._home_world_blacklist.isEmpty()) {
             this._home_world_blacklist = this._file.getStringList("HomeLimit.WorldBlacklist");
         }
-        this._force_vanish_in_different_gamemode = this._file.getBoolean("force-vanish-in-different-gamemode", false);
+        if (this._file.contains("vanish.force-in-different-gamemode")) {
+            this._force_vanish_in_different_gamemode = this._file.getBoolean("vanish.force-in-different-gamemode", false);
+        } else {
+            this._force_vanish_in_different_gamemode = this._file.getBoolean("force-vanish-in-different-gamemode", false);
+        }
+        if (this._file.contains("vanish.disable-collidable")) {
+            this._vanish_disable_collidable = this._file.getBoolean("vanish.disable-collidable", true);
+        } else {
+            this._vanish_disable_collidable = this._file.getBoolean("Vanish.DisableCollidable", true);
+        }
+        this._vanish_cancel_container_animation = this._file.getBoolean("vanish.cancel-container-animation", false);
 
         this.chat_func_enable = this._file.getBoolean("chat.Enable", false);
         this.allow_minimessage_perm = this._file.getString("chat.allow-minimessage-perm", "essd.chat.allow-use-minimessage");
@@ -401,5 +413,13 @@ public class ConfigManager {
 
     public Boolean getForceVanishInDifferentGamemode() {
         return this._force_vanish_in_different_gamemode;
+    }
+
+    public Boolean getVanishDisableCollidable() {
+        return this._vanish_disable_collidable;
+    }
+
+    public Boolean getVanishCancelContainerAnimation() {
+        return this._vanish_cancel_container_animation;
     }
 }

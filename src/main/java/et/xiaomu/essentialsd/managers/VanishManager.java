@@ -1,19 +1,27 @@
 package et.xiaomu.essentialsd.managers;
 
-import et.xiaomu.essentialsd.EssentialsD;
 import cn.lunadeer.utils.Notification;
-import cn.lunadeer.utils.Scheduler;
+import et.xiaomu.essentialsd.EssentialsD;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Container;
+import org.bukkit.block.Lidded;
+import org.bukkit.block.Lockable;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,6 +37,10 @@ public class VanishManager {
     private final Set<UUID> manualVanished = ConcurrentHashMap.newKeySet();
     private final Set<UUID> forcedVanished = ConcurrentHashMap.newKeySet();
     private final Set<UUID> vanishInvulnerable = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> vanishSilenced = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> vanishNoCollidable = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> vanishVisibleByDefaultOff = ConcurrentHashMap.newKeySet();
+    private final Map<UUID, SilentContainerSession> silentContainerSessions = new ConcurrentHashMap<>();
     private final BossBar bossBar = Bukkit.createBossBar("§7你正处于隐身状态", BarColor.WHITE, BarStyle.SEGMENTED_6);
 
     public boolean isVanished(UUID playerId) {
@@ -41,10 +53,6 @@ public class VanishManager {
 
     public boolean isForced(UUID playerId) {
         return forcedVanished.contains(playerId);
-    }
-
-    public boolean isManual(UUID playerId) {
-        return manualVanished.contains(playerId);
     }
 
     public boolean canSeeVanished(CommandSender sender) {
@@ -67,13 +75,19 @@ public class VanishManager {
 
     public boolean setManualVanished(Player player, boolean vanished) {
         UUID playerId = player.getUniqueId();
+        if (!vanished && isForced(playerId)) {
+            return false;
+        }
+
         boolean wasVanished = isVanished(playerId);
         boolean changed = vanished ? manualVanished.add(playerId) : manualVanished.remove(playerId);
         boolean isVanished = isVanished(playerId);
+
         if (wasVanished != isVanished) {
-            onVisibilityStateChanged(player, isVanished);
+            applyVanishState(player, isVanished);
+            refreshVisibilityForTarget(player);
         } else if (isVanished && changed) {
-            ensureBossBar(player);
+            applyVanishState(player, true);
         }
         return changed;
     }
@@ -84,47 +98,89 @@ public class VanishManager {
 
     public boolean refreshForcedState(Player player, GameMode mode, boolean notify) {
         UUID playerId = player.getUniqueId();
-        boolean shouldForce = shouldForceVanish(mode);
+        boolean shouldForce = EssentialsD.config.getForceVanishInDifferentGamemode()
+                && mode != Bukkit.getDefaultGameMode();
         boolean wasVanished = isVanished(playerId);
-        boolean changed = shouldForce ? forcedVanished.add(playerId) : forcedVanished.remove(playerId);
+        boolean forcedChanged = shouldForce ? forcedVanished.add(playerId) : forcedVanished.remove(playerId);
+        // 强制隐身只负责自动开启，不负责自动关闭。
+        boolean autoEnabledByForce = shouldForce && manualVanished.add(playerId);
         boolean isVanished = isVanished(playerId);
 
         if (wasVanished != isVanished) {
-            onVisibilityStateChanged(player, isVanished);
-        } else if (isVanished) {
-            ensureBossBar(player);
+            applyVanishState(player, isVanished);
+            refreshVisibilityForTarget(player);
         } else {
-            removeBossBar(player);
+            applyVanishState(player, isVanished);
         }
 
-        if (notify && changed) {
+        if (notify && forcedChanged) {
             if (shouldForce) {
                 Notification.warn(player, "你当前游戏模式不同于服务器默认游戏模式，已强制开启隐身");
             } else {
-                Notification.info(player, "你的游戏模式已恢复为默认模式，强制隐身已解除");
+                Notification.info(player, isVanished
+                        ? "你的游戏模式已恢复为默认模式，强制隐身已解除，隐身状态保持开启"
+                        : "你的游戏模式已恢复为默认模式，强制隐身已解除");
             }
         }
-        return changed;
+        return forcedChanged || autoEnabledByForce;
+    }
+
+    public void handleLogin(Player player) {
+        refreshForcedState(player, false);
+        applyVanishState(player, isVanished(player));
+        // 在玩家真正加入前完成可见性同步，降低隐身泄露窗口。
+        refreshVisibilityForTarget(player);
+        refreshVisibilityForViewer(player);
     }
 
     public void handleJoin(Player player) {
-        refreshForcedState(player, false);
         if (isVanished(player)) {
-            ensureBossBar(player);
-            ensureInvulnerable(player);
+            applyVanishState(player, true);
             Notification.warn(player, isForced(player.getUniqueId()) ? "你当前处于强制隐身状态" : "你仍处于隐身状态");
-        } else {
-            removeBossBar(player);
-            clearVanishInvulnerable(player);
         }
-        refreshTargetForAllViewers(player);
-        refreshViewerForAllTargets(player);
     }
 
     public void handleQuit(Player player) {
-        forcedVanished.remove(player.getUniqueId());
-        vanishInvulnerable.remove(player.getUniqueId());
-        removeBossBar(player);
+        closeSilentContainerSession(player, null);
+        UUID playerId = player.getUniqueId();
+        forcedVanished.remove(playerId);
+        vanishInvulnerable.remove(playerId);
+        vanishSilenced.remove(playerId);
+        vanishNoCollidable.remove(playerId);
+        vanishVisibleByDefaultOff.remove(playerId);
+        bossBar.removePlayer(player);
+    }
+
+    public boolean openContainerWithoutAnimation(Player player, Block clickedBlock) {
+        if (clickedBlock == null || !EssentialsD.config.getVanishCancelContainerAnimation() || !isVanished(player)) {
+            return false;
+        }
+        Inventory sourceInventory = resolveAnimationContainerInventory(player, clickedBlock.getState());
+        if (sourceInventory == null) {
+            return false;
+        }
+
+        closeSilentContainerSession(player, null);
+        Inventory mirrorInventory = createMirrorInventory(sourceInventory);
+        mirrorInventory.setContents(cloneContents(sourceInventory.getContents()));
+        silentContainerSessions.put(player.getUniqueId(), new SilentContainerSession(sourceInventory, mirrorInventory));
+        player.openInventory(mirrorInventory);
+        return true;
+    }
+
+    public void closeSilentContainerSession(Player player, Inventory closedTop) {
+        UUID playerId = player.getUniqueId();
+        SilentContainerSession session = silentContainerSessions.get(playerId);
+        if (session == null || (closedTop != null && session.mirrorInventory() != closedTop)) {
+            return;
+        }
+        silentContainerSessions.remove(playerId);
+        try {
+            if (session.sourceInventory().getSize() == session.mirrorInventory().getSize()) {
+                session.sourceInventory().setContents(cloneContents(session.mirrorInventory().getContents()));
+            }
+        } catch (Throwable ignored) {
+        }
     }
 
     public void reload() {
@@ -135,6 +191,7 @@ public class VanishManager {
 
     public void shutdown() {
         List<Player> onlinePlayers = new ArrayList<>(Bukkit.getOnlinePlayers());
+
         for (UUID playerId : new ArrayList<>(vanishInvulnerable)) {
             Player player = Bukkit.getPlayer(playerId);
             if (player != null && player.isOnline() && vanishInvulnerable.remove(playerId)) {
@@ -143,6 +200,43 @@ public class VanishManager {
                 vanishInvulnerable.remove(playerId);
             }
         }
+        for (UUID playerId : new ArrayList<>(vanishSilenced)) {
+            Player player = Bukkit.getPlayer(playerId);
+            if (player != null && player.isOnline() && vanishSilenced.remove(playerId)) {
+                player.setSilent(false);
+            } else {
+                vanishSilenced.remove(playerId);
+            }
+        }
+        for (UUID playerId : new ArrayList<>(vanishNoCollidable)) {
+            Player player = Bukkit.getPlayer(playerId);
+            if (player != null && player.isOnline() && vanishNoCollidable.remove(playerId)) {
+                player.setCollidable(true);
+            } else {
+                vanishNoCollidable.remove(playerId);
+            }
+        }
+        for (UUID playerId : new ArrayList<>(vanishVisibleByDefaultOff)) {
+            Player player = Bukkit.getPlayer(playerId);
+            if (player != null && player.isOnline() && vanishVisibleByDefaultOff.remove(playerId)) {
+                player.setVisibleByDefault(true);
+            } else {
+                vanishVisibleByDefaultOff.remove(playerId);
+            }
+        }
+        for (UUID playerId : new ArrayList<>(silentContainerSessions.keySet())) {
+            SilentContainerSession session = silentContainerSessions.remove(playerId);
+            if (session == null) {
+                continue;
+            }
+            try {
+                if (session.sourceInventory().getSize() == session.mirrorInventory().getSize()) {
+                    session.sourceInventory().setContents(cloneContents(session.mirrorInventory().getContents()));
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+
         for (Player player : onlinePlayers) {
             bossBar.removePlayer(player);
         }
@@ -153,10 +247,15 @@ public class VanishManager {
                 }
             }
         }
+
         bossBar.removeAll();
         manualVanished.clear();
         forcedVanished.clear();
         vanishInvulnerable.clear();
+        vanishSilenced.clear();
+        vanishNoCollidable.clear();
+        vanishVisibleByDefaultOff.clear();
+        silentContainerSessions.clear();
     }
 
     public List<Player> getVanishedPlayers() {
@@ -166,83 +265,111 @@ public class VanishManager {
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    private boolean shouldForceVanish(GameMode gameMode) {
-        return EssentialsD.config.getForceVanishInDifferentGamemode()
-                && gameMode != Bukkit.getDefaultGameMode();
-    }
-
-    private void onVisibilityStateChanged(Player target, boolean vanished) {
-        if (vanished) {
-            ensureBossBar(target);
-            ensureInvulnerable(target);
-        } else {
-            removeBossBar(target);
-            clearVanishInvulnerable(target);
-        }
-        refreshTargetForAllViewers(target);
-    }
-
-    private void refreshTargetForAllViewers(Player target) {
+    private void refreshVisibilityForTarget(Player target) {
         for (Player viewer : new ArrayList<>(Bukkit.getOnlinePlayers())) {
-            refreshViewer(viewer, target);
+            refreshVisibility(viewer, target);
         }
     }
 
-    private void refreshViewerForAllTargets(Player viewer) {
+    private void refreshVisibilityForViewer(Player viewer) {
         for (Player target : new ArrayList<>(Bukkit.getOnlinePlayers())) {
-            refreshViewer(viewer, target);
+            refreshVisibility(viewer, target);
         }
     }
 
-    private void refreshViewer(Player viewer, Player target) {
+    private void refreshVisibility(Player viewer, Player target) {
         if (viewer.getUniqueId().equals(target.getUniqueId())) {
             return;
         }
-        Scheduler.runEntityTask(viewer, () -> {
-            if (!viewer.isOnline() || !target.isOnline()) {
-                return;
-            }
-            if (isHiddenFrom(viewer, target)) {
-                viewer.hidePlayer(EssentialsD.instance, target);
-            } else {
-                viewer.showPlayer(EssentialsD.instance, target);
-            }
-        });
+        if (isHiddenFrom(viewer, target)) {
+            viewer.hidePlayer(EssentialsD.instance, target);
+        } else {
+            viewer.showPlayer(EssentialsD.instance, target);
+        }
     }
 
-    private void ensureBossBar(Player player) {
-        Scheduler.runEntityTask(player, () -> {
+    private void applyVanishState(Player player, boolean vanished) {
+        UUID playerId = player.getUniqueId();
+        if (vanished) {
             if (player.isOnline()) {
                 bossBar.addPlayer(player);
             }
-        });
-    }
-
-    private void removeBossBar(Player player) {
-        Scheduler.runEntityTask(player, () -> bossBar.removePlayer(player));
-    }
-
-    private void ensureInvulnerable(Player player) {
-        Scheduler.runEntityTask(player, () -> {
-            if (!player.isOnline()) {
-                return;
-            }
             if (!player.isInvulnerable()) {
-                vanishInvulnerable.add(player.getUniqueId());
+                vanishInvulnerable.add(playerId);
                 player.setInvulnerable(true);
             }
-        });
+            if (player.isVisibleByDefault()) {
+                vanishVisibleByDefaultOff.add(playerId);
+            }
+            player.setVisibleByDefault(false);
+
+            if (!player.isSilent()) {
+                vanishSilenced.add(playerId);
+            }
+            player.setSilent(true);
+
+            if (EssentialsD.config.getVanishDisableCollidable()) {
+                if (player.isCollidable()) {
+                    vanishNoCollidable.add(playerId);
+                }
+                player.setCollidable(false);
+            } else if (vanishNoCollidable.remove(playerId)) {
+                player.setCollidable(true);
+            }
+            return;
+        }
+
+        bossBar.removePlayer(player);
+        if (vanishInvulnerable.remove(playerId)) {
+            player.setInvulnerable(false);
+        }
+        if (vanishSilenced.remove(playerId)) {
+            player.setSilent(false);
+        }
+        if (vanishNoCollidable.remove(playerId)) {
+            player.setCollidable(true);
+        }
+        if (vanishVisibleByDefaultOff.remove(playerId)) {
+            player.setVisibleByDefault(true);
+        }
     }
 
-    private void clearVanishInvulnerable(Player player) {
-        Scheduler.runEntityTask(player, () -> {
-            if (!player.isOnline()) {
-                vanishInvulnerable.remove(player.getUniqueId());
-                return;
-            }
-            if (vanishInvulnerable.remove(player.getUniqueId())) {
-                player.setInvulnerable(false);
-            }
-        });
+    private Inventory resolveAnimationContainerInventory(Player player, BlockState blockState) {
+        if (!(blockState instanceof Lidded)) {
+            return null;
+        }
+        if (blockState instanceof Lockable lockable && lockable.isLocked()) {
+            return null;
+        }
+        if (blockState instanceof Container container) {
+            return container.getInventory();
+        }
+        if (blockState instanceof org.bukkit.block.EnderChest) {
+            return player.getEnderChest();
+        }
+        return null;
+    }
+
+    private Inventory createMirrorInventory(Inventory sourceInventory) {
+        InventoryType sourceType = sourceInventory.getType();
+        if (sourceType == InventoryType.CHEST) {
+            return Bukkit.createInventory(null, sourceInventory.getSize());
+        }
+        try {
+            return Bukkit.createInventory(null, sourceType);
+        } catch (IllegalArgumentException ignored) {
+            return Bukkit.createInventory(null, sourceInventory.getSize());
+        }
+    }
+
+    private ItemStack[] cloneContents(ItemStack[] contents) {
+        ItemStack[] cloned = new ItemStack[contents.length];
+        for (int i = 0; i < contents.length; i++) {
+            cloned[i] = contents[i] == null ? null : contents[i].clone();
+        }
+        return cloned;
+    }
+
+    private record SilentContainerSession(Inventory sourceInventory, Inventory mirrorInventory) {
     }
 }
