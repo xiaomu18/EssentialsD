@@ -252,10 +252,10 @@ public final class EssentialsD extends JavaPlugin {
         }
         placeholderExpansion = new EssentialsDPlaceholderExpansion(this);
         if (placeholderExpansion.register()) {
-            XLogger.info("PlaceholderAPI Hook 已注册: %essd_online_without_vanish%");
+            XLogger.info("PlaceholderAPI 变量已注册");
             return;
         }
-        XLogger.warn("PlaceholderAPI Hook 注册失败，变量 %essd_online_without_vanish% 不可用");
+        XLogger.warn("PlaceholderAPI 变量注册失败");
         placeholderExpansion = null;
     }
 

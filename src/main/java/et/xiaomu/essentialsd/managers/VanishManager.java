@@ -4,6 +4,7 @@ import cn.lunadeer.utils.Notification;
 import cn.lunadeer.utils.XLogger;
 import et.xiaomu.essentialsd.EssentialsD;
 import et.xiaomu.essentialsd.dtos.VanishState;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.block.Block;
@@ -249,6 +250,7 @@ public class VanishManager {
         mirrorInventory.setContents(cloneContents(sourceInventory.getContents()));
         silentContainerSessions.put(player.getUniqueId(), new SilentContainerSession(sourceInventory, mirrorInventory));
         player.openInventory(mirrorInventory);
+        Notification.info(player, Component.text("你悄悄地打开了 ").append(Component.translatable(clickedBlock.getType().translationKey())));
         return true;
     }
 
