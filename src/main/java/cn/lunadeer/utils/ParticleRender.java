@@ -9,8 +9,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class ParticleRender {
     private static final int renderMaxRadius = 48;
 
-    public static void showBoxBorder(JavaPlugin plugin, Player player, Location loc1, Location loc2) {
-        Scheduler scheduler = new Scheduler(plugin);
+    public static void showBoxBorder(JavaPlugin ignoredPlugin, Player player, Location loc1, Location loc2) {
         Scheduler.runTask(() -> {
             if (loc1.getWorld().equals(loc2.getWorld())) {
                 int minX = Math.min(loc1.getBlockX(), loc2.getBlockX());
@@ -52,8 +51,7 @@ public class ParticleRender {
         });
     }
 
-    public static void showBoxFace(JavaPlugin plugin, Player player, Location loc1, Location loc2) {
-        Scheduler scheduler = new Scheduler(plugin);
+    public static void showBoxFace(JavaPlugin ignoredPlugin, Player player, Location loc1, Location loc2) {
         Scheduler.runTask(() -> {
             if (loc1.getWorld().equals(loc2.getWorld())) {
                 int minX = Math.min(loc1.getBlockX(), loc2.getBlockX());

@@ -8,45 +8,43 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Map;
-
 public class More implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player)) {
             Notification.warn(sender, "只有玩家可以使用此命令");
             return true;
-        } else {
-            Player player = (Player) sender;
-            int amount = 63;
-            if (args.length > 0) {
-                try {
-                    amount = Integer.parseInt(args[0]);
-                } catch (NumberFormatException var11) {
-                    Notification.error(sender, "参数错误");
-                    return false;
-                }
+        }
+
+        if (args.length > 1) {
+            Notification.error(sender, "用法: /more [amount]");
+            return true;
+        }
+
+        Player player = (Player) sender;
+        ItemStack item = player.getInventory().getItemInMainHand();
+        if (item.getType().isAir()) {
+            Notification.error(sender, "你手上没有物品");
+            return true;
+        }
+
+        int maxAmount = item.getMaxStackSize();
+        int targetAmount = maxAmount;
+        if (args.length == 1) {
+            try {
+                targetAmount = Integer.parseInt(args[0]);
+            } catch (NumberFormatException ignored) {
+                Notification.error(sender, "参数错误，数量必须是 1-%d 之间的整数", maxAmount);
+                return true;
             }
-
-            ItemStack item = player.getInventory().getItemInMainHand();
-            if (item.getType().isAir()) {
-                Notification.error(sender, "你手上没有物品");
-                return false;
-            } else {
-                int failed_add_count = 0;
-
-                for (int i = 0; i < amount; ++i) {
-                    Map<Integer, ItemStack> res = player.getInventory().addItem(new ItemStack[]{new ItemStack(item.getType())});
-                    if (!res.isEmpty()) {
-                        ++failed_add_count;
-                    }
-                }
-
-                if (failed_add_count != 0) {
-                    Notification.warn(sender, "背包已满，有 %d 个物品未能添加", failed_add_count);
-                }
-
+            if (targetAmount < 1 || targetAmount > maxAmount) {
+                Notification.error(sender, "参数错误，数量必须是 1-%d 之间的整数", maxAmount);
                 return true;
             }
         }
+
+        item.setAmount(targetAmount);
+        player.getInventory().setItemInMainHand(item);
+        Notification.info(sender, "已将手持物品数量设置为 %d", targetAmount);
+        return true;
     }
 }

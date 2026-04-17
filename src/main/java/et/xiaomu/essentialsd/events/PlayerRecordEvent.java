@@ -1,7 +1,5 @@
 package et.xiaomu.essentialsd.events;
 
-import et.xiaomu.essentialsd.EssentialsD;
-import et.xiaomu.essentialsd.commands.Kickall;
 import et.xiaomu.essentialsd.dtos.LoginRecord;
 import et.xiaomu.essentialsd.dtos.NameRecord;
 import et.xiaomu.essentialsd.dtos.PlayerName;
@@ -18,11 +16,6 @@ public class PlayerRecordEvent implements Listener {
     )
     public void onPlayerLogin(PlayerLoginEvent event) {
         Player player = event.getPlayer();
-
-        if (((Kickall) EssentialsD.commands.get("kickall")).duration > System.currentTimeMillis() && !player.isOp()) {
-            event.disallow(PlayerLoginEvent.Result.KICK_OTHER, ((Kickall) EssentialsD.commands.get("kickall")).reason);
-            return;
-        }
 
         String last_name = PlayerName.getName(player.getUniqueId());
         if (last_name == null) {

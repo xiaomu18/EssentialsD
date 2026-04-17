@@ -32,15 +32,15 @@ public class SetWarp implements TabExecutor {
                 location = ((Player) commandSender).getLocation();
             } else {
                 try {
-                    double x = Double.parseDouble(strings[1]);
-                    double y = Double.parseDouble(strings[2]);
-                    double z = Double.parseDouble(strings[3]);
-                    World world = EssentialsD.instance.getServer().getWorld(strings[0]);
+                    World world = EssentialsD.instance.getServer().getWorld(strings[1]);
                     if (world == null) {
-                        Notification.error(commandSender, "世界 %s 不存在", strings[0]);
+                        Notification.error(commandSender, "世界 %s 不存在", strings[1]);
                         return true;
                     }
 
+                    double x = Double.parseDouble(strings[2]);
+                    double y = Double.parseDouble(strings[3]);
+                    double z = Double.parseDouble(strings[4]);
                     location = new Location(world, x, y, z);
                 } catch (NumberFormatException var14) {
                     Notification.error(commandSender, "坐标必须是数字");

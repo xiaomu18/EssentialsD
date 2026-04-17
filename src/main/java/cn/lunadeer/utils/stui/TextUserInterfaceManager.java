@@ -1,6 +1,7 @@
 package cn.lunadeer.utils.stui;
 
 import cn.lunadeer.utils.Misc;
+import cn.lunadeer.utils.stui.inputter.Inputter;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
@@ -10,6 +11,8 @@ public class TextUserInterfaceManager {
 
     private BukkitAudiences adventure = null;
     private final JavaPlugin plugin;
+    private final cn.lunadeer.utils.scheduler.Scheduler cancellableScheduler;
+    private final Inputter inputter;
     private static TextUserInterfaceManager instance;
 
     public static TextUserInterfaceManager getInstance() {
@@ -22,6 +25,8 @@ public class TextUserInterfaceManager {
             this.adventure = BukkitAudiences.create(plugin);
         }
         this.plugin = plugin;
+        this.cancellableScheduler = new cn.lunadeer.utils.scheduler.Scheduler(plugin);
+        this.inputter = new Inputter(plugin);
     }
 
     public BukkitAudiences getAdventure() {

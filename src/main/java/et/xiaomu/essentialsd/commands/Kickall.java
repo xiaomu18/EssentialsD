@@ -11,13 +11,12 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 public class Kickall implements CommandExecutor {
-    public long duration = 0;
-    public String reason = "";
-
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        reason = ChatColor.translateAlternateColorCodes('&', args[0]);
-
-        duration = System.currentTimeMillis() + Integer.parseInt(args[1]) * 60L;
+        if (args.length == 0) {
+            Notification.error(sender, "用法: /kickall <reason>");
+            return true;
+        }
+        String reason = ChatColor.translateAlternateColorCodes('&', String.join(" ", args));
 
         Scheduler.runTask(() -> {
             for (Player player : Bukkit.getOnlinePlayers()) {

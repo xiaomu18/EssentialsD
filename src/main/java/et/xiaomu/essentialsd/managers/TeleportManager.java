@@ -290,23 +290,11 @@ public class TeleportManager {
 
         if (delay > 0L) {
             Notification.info(player, "将在 %d 秒后执行传送", delay);
-            Scheduler.runTaskAsync(() -> {
-                long left = delay;
-                while (left > 0L) {
-                    if (!player.isOnline()) {
-                        return;
-                    }
-                    Notification.actionBar(player, "传送倒计时：%d 秒", left);
-                    left--;
-                    try {
-                        Thread.sleep(1000L);
-                    } catch (InterruptedException e) {
-                        XLogger.warn(e.getMessage());
-                        return;
-                    }
-                }
-            });
+            scheduleActionBarCountdown(player, delay);
             Scheduler.runTaskLater(() -> {
+                if (!player.isOnline()) {
+                    return;
+                }
                 before.run();
                 doTeleportSafely(player, to, context);
                 after.run();
@@ -317,6 +305,17 @@ public class TeleportManager {
         before.run();
         doTeleportSafely(player, to, context);
         after.run();
+    }
+
+    private void scheduleActionBarCountdown(Player player, long leftSeconds) {
+        if (leftSeconds <= 0L || !player.isOnline()) {
+            return;
+        }
+        Notification.actionBar(player, "传送倒计时：%d 秒", leftSeconds);
+        if (leftSeconds == 1L) {
+            return;
+        }
+        Scheduler.runTaskLater(() -> scheduleActionBarCountdown(player, leftSeconds - 1L), 20L);
     }
 
     private boolean CoolingDown(Player player) {

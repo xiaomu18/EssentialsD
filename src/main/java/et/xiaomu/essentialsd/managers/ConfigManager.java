@@ -100,7 +100,10 @@ public class ConfigManager {
         this._recipes_light_block = this._file.getBoolean("Recipes.LightBlock", true);
         this._recipes_stacked_enchant_book = this._file.getBoolean("Recipes.StackedEnchantBook", true);
         this._home_limit_amount = this._file.getInt("HomeLimit.Amount", 5);
-        this._home_world_blacklist = this._file.getStringList("HomeLimit.WorldBlacklist");
+        this._home_world_blacklist = this._file.getStringList("HomeLimit.WorldBlackList");
+        if (this._home_world_blacklist.isEmpty()) {
+            this._home_world_blacklist = this._file.getStringList("HomeLimit.WorldBlacklist");
+        }
         this._force_vanish_in_different_gamemode = this._file.getBoolean("force-vanish-in-different-gamemode", false);
 
         this.chat_func_enable = this._file.getBoolean("chat.Enable", false);
