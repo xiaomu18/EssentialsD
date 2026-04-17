@@ -18,6 +18,7 @@ import et.xiaomu.essentialsd.managers.inspect.InspectManager;
 import et.xiaomu.essentialsd.managers.MuteManager;
 import et.xiaomu.essentialsd.managers.TeleportManager;
 import et.xiaomu.essentialsd.managers.VanishManager;
+import et.xiaomu.essentialsd.hooks.EssentialsDPlaceholderExpansion;
 import et.xiaomu.essentialsd.recipes.*;
 import cn.lunadeer.utils.DatabaseManager;
 import cn.lunadeer.utils.Notification;
@@ -27,6 +28,9 @@ import cn.lunadeer.utils.stui.TextUserInterfaceManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.server.PluginEnableEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
@@ -43,6 +47,7 @@ public final class EssentialsD extends JavaPlugin {
     public static MuteManager muteManager;
     public static InspectManager inspectManager;
     public static VanishManager vanishManager;
+    private EssentialsDPlaceholderExpansion placeholderExpansion;
     public static Map<String, CommandExecutor> commands = new HashMap<>();
 
     public static String buildDate = "unknown";
@@ -64,6 +69,8 @@ public final class EssentialsD extends JavaPlugin {
         inspectManager = new InspectManager();
         vanishManager = new VanishManager();
         new TextUserInterfaceManager(this);
+        registerPlaceholderExpansion();
+        registerPlaceholderExpansionBootstrap();
 
         Bukkit.getPluginManager().registerEvents(new ChatFunctionEvent(), this);
         Bukkit.getPluginManager().registerEvents(new InvisibleItemFrameEvent(), this);
@@ -164,6 +171,12 @@ public final class EssentialsD extends JavaPlugin {
                 vanishManager.shutdown();
             }
         });
+        shutdownComponent("PlaceholderAPI Hook", () -> {
+            if (placeholderExpansion != null) {
+                placeholderExpansion.unregister();
+                placeholderExpansion = null;
+            }
+        });
         shutdownComponent("传送缓存", () -> {
             if (tpManager != null) {
                 tpManager.shutdown();
@@ -228,5 +241,39 @@ public final class EssentialsD extends JavaPlugin {
             XLogger.error("关闭 %s 时发生异常: %s", name, throwable.getMessage());
             XLogger.error(throwable);
         }
+    }
+
+    private void registerPlaceholderExpansion() {
+        if (placeholderExpansion != null) {
+            return;
+        }
+        if (!Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+            return;
+        }
+        placeholderExpansion = new EssentialsDPlaceholderExpansion(this);
+        if (placeholderExpansion.register()) {
+            XLogger.info("PlaceholderAPI Hook 已注册: %essd_online_without_vanish%");
+            return;
+        }
+        XLogger.warn("PlaceholderAPI Hook 注册失败，变量 %essd_online_without_vanish% 不可用");
+        placeholderExpansion = null;
+    }
+
+    private void registerPlaceholderExpansionBootstrap() {
+        if (placeholderExpansion != null) {
+            return;
+        }
+        Bukkit.getPluginManager().registerEvents(new Listener() {
+            @EventHandler
+            public void onPluginEnable(PluginEnableEvent event) {
+                if (!"PlaceholderAPI".equalsIgnoreCase(event.getPlugin().getName())) {
+                    return;
+                }
+                registerPlaceholderExpansion();
+                if (placeholderExpansion != null) {
+                    PluginEnableEvent.getHandlerList().unregister(this);
+                }
+            }
+        }, this);
     }
 }

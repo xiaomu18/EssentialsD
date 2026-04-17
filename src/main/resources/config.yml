@@ -55,6 +55,7 @@ HomeLimit:
 vanish:
   force-in-different-gamemode: false  # 是否在玩家游戏模式不同于服务器默认游戏模式时强制开启隐身
   disable-collidable: true            # 隐身时关闭碰撞，防止推动实体
+  allow-vanisher-attack-player: true  # 是否允许隐身玩家攻击玩家，关闭后将禁止隐身玩家攻击所有玩家
   cancel-container-animation: false   # 隐身玩家打开带开合动画的容器时，改为无动画打开（对所有观察者生效）
 
   # 需安装 ProtocolLib。底层数据包级补充增强隐身方案，防止作弊客户端获取到隐身玩家信息

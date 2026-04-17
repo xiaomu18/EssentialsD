@@ -8,12 +8,15 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.entity.Entity;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.entity.Projectile;
 
 public class VanishEvent implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -57,6 +60,23 @@ public class VanishEvent implements Listener {
         }
     }
 
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onVanishedPlayerAttackPlayer(EntityDamageByEntityEvent event) {
+        if (EssentialsD.config.getVanishAllowVanisherAttackPlayer()) {
+            return;
+        }
+        if (!(event.getEntity() instanceof Player)) {
+            return;
+        }
+        Player attacker = resolvePlayerDamager(event.getDamager());
+        if (attacker == null) {
+            return;
+        }
+        if (EssentialsD.vanishManager.isVanished(attacker)) {
+            event.setCancelled(true);
+        }
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerQuit(PlayerQuitEvent event) {
         if (EssentialsD.vanishManager.isVanished(event.getPlayer().getUniqueId())) {
@@ -68,5 +88,15 @@ public class VanishEvent implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerGameModeChange(PlayerGameModeChangeEvent event) {
         EssentialsD.vanishManager.refreshForcedState(event.getPlayer(), event.getNewGameMode(), true);
+    }
+
+    private Player resolvePlayerDamager(Entity damager) {
+        if (damager instanceof Player player) {
+            return player;
+        }
+        if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player player) {
+            return player;
+        }
+        return null;
     }
 }
