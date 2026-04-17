@@ -130,15 +130,15 @@ public class VanishManager {
         // 明确在 PlayerLoginEvent 阶段设置 VisibleByDefault。
         applyVisibleByDefaultState(player, isVanished(player));
         // 在玩家真正加入前完成可见性同步，降低隐身泄露窗口。
-        refreshVisibilityForTarget(player);
-        refreshVisibilityForViewer(player);
+        refreshVisibilityFor(player);
     }
 
     public void handleJoin(Player player) {
-        if (isVanished(player)) {
-            if (player.isOnline()) {
-                bossBar.addPlayer(player);
-            }
+        boolean vanished = isVanished(player);
+        // Join 阶段兜底一次，避免其他插件在登录链路后覆盖隐身属性或可见性。
+        applyVanishState(player, vanished);
+        refreshVisibilityFor(player);
+        if (vanished) {
             Notification.warn(player, isForced(player.getUniqueId()) ? "你当前处于强制隐身状态" : "你仍处于隐身状态");
         }
     }
@@ -278,6 +278,11 @@ public class VanishManager {
         for (Player target : new ArrayList<>(Bukkit.getOnlinePlayers())) {
             refreshVisibility(viewer, target);
         }
+    }
+
+    private void refreshVisibilityFor(Player player) {
+        refreshVisibilityForTarget(player);
+        refreshVisibilityForViewer(player);
     }
 
     private void refreshVisibility(Player viewer, Player target) {

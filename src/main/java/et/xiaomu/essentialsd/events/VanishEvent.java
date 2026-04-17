@@ -65,7 +65,7 @@ public class VanishEvent implements Listener {
         EssentialsD.vanishManager.handleQuit(event.getPlayer());
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerGameModeChange(PlayerGameModeChangeEvent event) {
         EssentialsD.vanishManager.refreshForcedState(event.getPlayer(), event.getNewGameMode(), true);
     }
