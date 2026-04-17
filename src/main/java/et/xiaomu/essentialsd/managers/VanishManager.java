@@ -127,7 +127,8 @@ public class VanishManager {
 
     public void handleLogin(Player player) {
         refreshForcedState(player, false);
-        applyVanishState(player, isVanished(player));
+        // 明确在 PlayerLoginEvent 阶段设置 VisibleByDefault。
+        applyVisibleByDefaultState(player, isVanished(player));
         // 在玩家真正加入前完成可见性同步，降低隐身泄露窗口。
         refreshVisibilityForTarget(player);
         refreshVisibilityForViewer(player);
@@ -135,7 +136,9 @@ public class VanishManager {
 
     public void handleJoin(Player player) {
         if (isVanished(player)) {
-            applyVanishState(player, true);
+            if (player.isOnline()) {
+                bossBar.addPlayer(player);
+            }
             Notification.warn(player, isForced(player.getUniqueId()) ? "你当前处于强制隐身状态" : "你仍处于隐身状态");
         }
     }
@@ -298,10 +301,7 @@ public class VanishManager {
                 vanishInvulnerable.add(playerId);
                 player.setInvulnerable(true);
             }
-            if (player.isVisibleByDefault()) {
-                vanishVisibleByDefaultOff.add(playerId);
-            }
-            player.setVisibleByDefault(false);
+            applyVisibleByDefaultState(player, true);
 
             if (!player.isSilent()) {
                 vanishSilenced.add(playerId);
@@ -328,6 +328,18 @@ public class VanishManager {
         }
         if (vanishNoCollidable.remove(playerId)) {
             player.setCollidable(true);
+        }
+        applyVisibleByDefaultState(player, false);
+    }
+
+    private void applyVisibleByDefaultState(Player player, boolean vanished) {
+        UUID playerId = player.getUniqueId();
+        if (vanished) {
+            if (player.isVisibleByDefault()) {
+                vanishVisibleByDefaultOff.add(playerId);
+            }
+            player.setVisibleByDefault(false);
+            return;
         }
         if (vanishVisibleByDefaultOff.remove(playerId)) {
             player.setVisibleByDefault(true);
