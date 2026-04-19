@@ -61,6 +61,8 @@ vanish:
   allow-vanisher-attack-player: true
   # 隐身玩家打开带开合动画的容器时，是否改为无动画打开
   cancel-container-animation: false
+  # 是否拦截向已隐身玩家发送的常见私聊命令（如 /msg /tell /w）
+  block-private-message-to-vanished: false
   # 增强隐身方案，底层数据包级拦截，防止作弊客户端获取到隐身玩家信息。需安装 ProtocolLib。
   enhanced-mode: false
 

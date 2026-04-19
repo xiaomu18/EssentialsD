@@ -28,6 +28,7 @@ public class Control implements TabExecutor {
         }
         if ("version".equalsIgnoreCase(args[0])) {
             Notification.info(sender, "This server is running EssentialsD v%s %s@%s (%s) (Implementing API version %s)", EssentialsD.instance.getPluginMeta().getVersion(), EssentialsD.gitBranch, EssentialsD.instance.getGitCommit(), EssentialsD.instance.getBuildDate(), EssentialsD.instance.getPluginMeta().getAPIVersion());
+            Notification.info(sender, "Author: lunadeer (previous), xiaomu18 (now)");
             Notification.info(sender, EssentialsD.instance.getProjectUrl());
             return true;
         }

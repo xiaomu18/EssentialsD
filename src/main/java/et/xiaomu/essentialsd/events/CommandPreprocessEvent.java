@@ -2,6 +2,9 @@ package et.xiaomu.essentialsd.events;
 
 import et.xiaomu.essentialsd.EssentialsD;
 import cn.lunadeer.utils.Notification;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -9,13 +12,19 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerCommandSendEvent;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public class CommandPreprocessEvent implements Listener {
-    private static final String BLOCKED_COMMAND_ALIAS = "__essd_blocked_command__";
+    private static final String BLOCKED_COMMAND_ALIAS = "BLOCKED_COMMAND";
+    private static final Set<String> PRIVATE_MESSAGE_COMMANDS = new HashSet<>(Arrays.asList(
+            "msg", "tell", "w", "whisper"
+    ));
 
     // 存储玩家最后一次使用命令的时间戳
     private final Map<UUID, Long> lastCommandTime = new HashMap<>();
@@ -27,6 +36,12 @@ public class CommandPreprocessEvent implements Listener {
 
         // 跳过没有实际内容的命令
         if (message.length() < 2) return;
+
+        if (shouldBlockPrivateMessage(player, message)) {
+            event.setCancelled(true);
+            player.sendMessage(Component.translatable("argument.entity.notfound.player").color(NamedTextColor.RED));
+            return;
+        }
 
         if (EssentialsD.muteManager.getMute(player) != null && EssentialsD.muteManager.isBlockedCommand(message)) {
             event.setCancelled(true);
@@ -101,5 +116,39 @@ public class CommandPreprocessEvent implements Listener {
             value = value.substring(namespaceIndex + 1);
         }
         return value.toLowerCase(Locale.ROOT);
+    }
+
+    private boolean shouldBlockPrivateMessage(Player sender, String message) {
+        if (!Boolean.TRUE.equals(EssentialsD.config.getVanishBlockPrivateMessageToVanished())) {
+            return false;
+        }
+
+        String rootCommand = extractRootCommand(message);
+        if (!PRIVATE_MESSAGE_COMMANDS.contains(rootCommand)) {
+            return false;
+        }
+
+        String targetName = extractFirstArgument(message);
+        if (targetName == null || targetName.isBlank()) {
+            return false;
+        }
+
+        Player target = Bukkit.getPlayer(targetName);
+        return target != null && EssentialsD.vanishManager.isHiddenFrom(sender, target);
+    }
+
+    private String extractFirstArgument(String message) {
+        String value = message == null ? "" : message.trim();
+        while (value.startsWith("/")) {
+            value = value.substring(1);
+        }
+        if (value.isBlank()) {
+            return null;
+        }
+        String[] parts = value.split("\\s+", 3);
+        if (parts.length < 2) {
+            return null;
+        }
+        return parts[1];
     }
 }

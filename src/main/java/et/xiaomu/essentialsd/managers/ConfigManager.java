@@ -49,6 +49,7 @@ public class ConfigManager {
     private Boolean _vanish_disable_collidable;
     private Boolean _vanish_cancel_container_animation;
     private Boolean _vanish_allow_vanisher_attack_player;
+    private Boolean _vanish_block_private_message_to_vanished;
     private Boolean _vanish_enhanced_mode;
     public Boolean chat_func_enable;
     public List<String> forbidWords;
@@ -120,6 +121,7 @@ public class ConfigManager {
         }
         this._vanish_cancel_container_animation = this._file.getBoolean("vanish.cancel-container-animation", false);
         this._vanish_allow_vanisher_attack_player = this._file.getBoolean("vanish.allow-vanisher-attack-player", true);
+        this._vanish_block_private_message_to_vanished = this._file.getBoolean("vanish.block-private-message-to-vanished", false);
         this._vanish_enhanced_mode = this._file.getBoolean("vanish.enhanced-mode", false);
 
         this.chat_func_enable = this._file.getBoolean("chat.Enable", false);
@@ -429,6 +431,10 @@ public class ConfigManager {
 
     public Boolean getVanishAllowVanisherAttackPlayer() {
         return this._vanish_allow_vanisher_attack_player;
+    }
+
+    public Boolean getVanishBlockPrivateMessageToVanished() {
+        return this._vanish_block_private_message_to_vanished;
     }
 
     public Boolean getVanishEnhancedMode() {

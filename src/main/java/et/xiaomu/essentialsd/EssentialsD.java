@@ -148,8 +148,7 @@ public final class EssentialsD extends JavaPlugin {
         if (config.getRecipesLightBlock()) {
             this.getServer().addRecipe(LightBlock.getRecipe());
         }
-        XLogger.info("EssentialsD 已加载");
-        XLogger.info("版本: " + this.getPluginMeta().getVersion() + " Reloaded");
+        XLogger.info("EssentialsD v" + this.getPluginMeta().getVersion() + " Reloaded By xiaomu18");
         XLogger.info("  ______                    _   _       _     _____");
         XLogger.info(" |  ____|                  | | (_)     | |   |  __ \\");
         XLogger.info(" | |__   ___ ___  ___ _ __ | |_ _  __ _| |___| |  | |");
