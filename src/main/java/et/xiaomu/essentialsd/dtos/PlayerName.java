@@ -64,6 +64,64 @@ public class PlayerName {
         }
     }
 
+    public static UUID getUuid(String name) {
+        String sql = "SELECT uuid FROM player_name WHERE LOWER(last_known_name) = LOWER(?) LIMIT 1;";
+
+        try {
+            ResultSet rs = EssentialsD.database.query(sql, name);
+
+            UUID result;
+            label63:
+            {
+                label69:
+                {
+                    try {
+                        if (rs == null) {
+                            result = null;
+                            break label69;
+                        }
+
+                        if (rs.next()) {
+                            result = UUID.fromString(rs.getString("uuid"));
+                            break label63;
+                        }
+                    } catch (Throwable var6) {
+                        if (rs != null) {
+                            try {
+                                rs.close();
+                            } catch (Throwable var5) {
+                                var6.addSuppressed(var5);
+                            }
+                        }
+
+                        throw var6;
+                    }
+
+                    if (rs != null) {
+                        rs.close();
+                    }
+
+                    return null;
+                }
+
+                if (rs != null) {
+                    rs.close();
+                }
+
+                return result;
+            }
+
+            if (rs != null) {
+                rs.close();
+            }
+
+            return result;
+        } catch (Exception e) {
+            EssentialsD.database.handleDatabaseError("通过玩家名获取 UUID 失败", e, sql);
+            return null;
+        }
+    }
+
     public static boolean setName(UUID uuid, String name) {
         String sql = "INSERT INTO player_name (uuid, last_known_name) VALUES (?, ?) ON CONFLICT (uuid) DO NOTHING;";
 

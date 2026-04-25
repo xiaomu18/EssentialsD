@@ -26,6 +26,7 @@ final class NbtBridge {
     private final Class<?> tagClass;
     private final Class<?> providerClass;
     private final Object registryAccess;
+    private final Constructor<?> compoundCtor;
     private final Constructor<?> listCtor;
     private final Method asBukkitCopyMethod;
     private final Method asNmsCopyMethod;
@@ -57,6 +58,7 @@ final class NbtBridge {
             this.listTagClass = Class.forName("net.minecraft.nbt.ListTag");
             this.tagClass = Class.forName("net.minecraft.nbt.Tag");
             this.providerClass = Class.forName("net.minecraft.core.HolderLookup$Provider");
+            this.compoundCtor = compoundTagClass.getConstructor();
             this.listCtor = listTagClass.getConstructor();
             this.asBukkitCopyMethod = craftItemStackClass.getMethod("asBukkitCopy", nmsItemStackClass);
             this.asNmsCopyMethod = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class);
@@ -144,6 +146,14 @@ final class NbtBridge {
             entries.add(entry);
         }
         putMethod.invoke(rootTag, "Inventory", list);
+
+        Object equipment = compoundCtor.newInstance();
+        writeEquipmentSlot(equipment, "feet", items, 36);
+        writeEquipmentSlot(equipment, "legs", items, 37);
+        writeEquipmentSlot(equipment, "chest", items, 38);
+        writeEquipmentSlot(equipment, "head", items, 39);
+        writeEquipmentSlot(equipment, "offhand", items, 40);
+        putMethod.invoke(rootTag, "equipment", equipment);
     }
 
     void writeEnderChest(Object rootTag, ItemStack[] items) throws Exception {
@@ -583,6 +593,17 @@ final class NbtBridge {
             return;
         }
         items[slot] = readItemSafely(itemTag, "装备槽 " + key);
+    }
+
+    private void writeEquipmentSlot(Object equipment, String key, ItemStack[] items, int slot) throws Exception {
+        if (slot < 0 || slot >= items.length) {
+            return;
+        }
+        ItemStack item = InspectManager.normalize(items[slot]);
+        if (item == null) {
+            return;
+        }
+        putMethod.invoke(equipment, key, toTag(item));
     }
 
     private ItemStack readItemSafely(Object tag, String slotName) {

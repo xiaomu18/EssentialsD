@@ -26,6 +26,9 @@ permissions:
       essd.fly.other: true
       essd.flyspeed: true
       essd.flyspeed.other: true
+      essd.clear: true
+      essd.clear.other: true
+      essd.clear.offline: true
       essd.sit: true
       essd.save: true
       essd.more: true
@@ -53,6 +56,7 @@ permissions:
       essd.vanish.tpahere: true
       essd.control: true
       essd.heal: true
+      essd.info: true
       essd.gamemode: true
       essd.gamemode.other: true
       essd.gamemode.survival: true
@@ -77,6 +81,12 @@ permissions:
     default: op
   essd.flyspeed.other:
     default: false
+  essd.clear:
+    default: op
+  essd.clear.other:
+    default: false
+  essd.clear.offline:
+    default: op
   essd.sit:
     default: true
   essd.save:
@@ -131,6 +141,8 @@ permissions:
     default: op
   essd.heal:
     default: op
+  essd.info:
+    default: op
   essd.gamemode:
     default: op
   essd.gamemode.other:
@@ -173,6 +185,10 @@ commands:
     description: Set fly speed
     usage: /flyspeed <reset|speed> [player]
     permission: essd.flyspeed
+  clear:
+    description: Clear a player's inventory or ender chest
+    usage: /clear [player] [--ender] [--confirm]
+    permission: essd.clear
   sit:
     description: Sit down in place
     usage: /sit
@@ -273,6 +289,10 @@ commands:
     description: Heal a player
     usage: /heal [player]
     permission: essd.heal
+  info:
+    description: Show online or offline player information
+    usage: /info <player>
+    permission: essd.info
   home-editor:
     description: Manage another player's homes
     usage: /home-editor <playerName> view/tp/remove (homeName)

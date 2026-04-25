@@ -89,7 +89,9 @@ public final class EssentialsD extends JavaPlugin {
 
         commands.put("fly", new Fly());
         commands.put("flyspeed", new FlySpeed());
+        commands.put("clear", new Clear());
         commands.put("god", new God());
+        commands.put("info", new Info());
         commands.put("save", new Save());
         commands.put("heal", new Heal());
         commands.put("more", new More());

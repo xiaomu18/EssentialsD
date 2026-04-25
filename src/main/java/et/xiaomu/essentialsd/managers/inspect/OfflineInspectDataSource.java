@@ -2,12 +2,10 @@ package et.xiaomu.essentialsd.managers.inspect;
 
 import cn.lunadeer.utils.XLogger;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.UUID;
 
 final class OfflineInspectDataSource implements InspectDataSource {
     private static volatile NbtBridge nbtBridge;
@@ -24,7 +22,7 @@ final class OfflineInspectDataSource implements InspectDataSource {
 
     static OfflineInspectDataSource load(OfflinePlayer player, InspectManager.Mode mode) {
         try {
-            Path path = playerDataFile(player.getUniqueId());
+            Path path = OfflinePlayerDataAccess.playerDataFile(player.getUniqueId());
             if (path == null || !Files.exists(path)) {
                 return null;
             }
@@ -91,17 +89,6 @@ final class OfflineInspectDataSource implements InspectDataSource {
             nbtBridge = new NbtBridge();
         }
         return nbtBridge;
-    }
-
-    private static Path playerDataFile(UUID uuid) {
-        World world = org.bukkit.Bukkit.getWorlds().stream()
-                .filter(candidate -> candidate.getEnvironment() == World.Environment.NORMAL)
-                .findFirst()
-                .orElse(org.bukkit.Bukkit.getWorlds().isEmpty() ? null : org.bukkit.Bukkit.getWorlds().get(0));
-        if (world == null) {
-            return null;
-        }
-        return world.getWorldFolder().toPath().resolve("playerdata").resolve(uuid + ".dat");
     }
 
     private static void logLoadFailure(Throwable throwable) {
