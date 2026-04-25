@@ -131,7 +131,7 @@ public final class EssentialsD extends JavaPlugin {
 
         // 注册命令
         commands.forEach((key, value) -> {
-            PluginCommand command = Bukkit.getPluginCommand(key);
+            PluginCommand command = this.getCommand(key);
 
             if (command == null) {
                 getLogger().warning("注册命令 " + key + " 时失败, 此命令将不可使用...");
