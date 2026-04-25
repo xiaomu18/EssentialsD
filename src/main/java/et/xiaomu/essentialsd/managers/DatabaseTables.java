@@ -25,5 +25,9 @@ public class DatabaseTables {
         EssentialsD.database.query(sql);
         sql = "CREATE TABLE IF NOT EXISTS vanish_state ( uuid              VARCHAR(36) NOT NULL UNIQUE PRIMARY KEY, updated_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP );";
         EssentialsD.database.query(sql);
+        sql = "CREATE TABLE IF NOT EXISTS pure_state ( uuid              VARCHAR(36) NOT NULL UNIQUE PRIMARY KEY, enabled           BOOLEAN NOT NULL, updated_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (uuid) REFERENCES player_name(uuid) ON DELETE CASCADE);";
+        EssentialsD.database.query(sql);
+        sql = "CREATE TABLE IF NOT EXISTS pure_list ( owner_uuid        VARCHAR(36) NOT NULL, target_uuid       VARCHAR(36) NOT NULL, created_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (owner_uuid, target_uuid), FOREIGN KEY (owner_uuid) REFERENCES player_name(uuid) ON DELETE CASCADE, FOREIGN KEY (target_uuid) REFERENCES player_name(uuid) ON DELETE CASCADE);";
+        EssentialsD.database.query(sql);
     }
 }

@@ -103,6 +103,26 @@ public class DatabaseManager {
         }
     }
 
+    public boolean execute(String sql, Object... args) {
+        if (this.conn == null) {
+            this.handleDatabaseError("数据库连接失败: ", new Exception("Connection is null"), sql);
+            return false;
+        }
+        try {
+            sql = this.sqlReg(sql);
+            try (PreparedStatement stmt = this.conn.prepareStatement(sql)) {
+                for (int i = 0; i < args.length; ++i) {
+                    stmt.setObject(i + 1, args[i]);
+                }
+                stmt.executeUpdate();
+                return true;
+            }
+        } catch (SQLException e) {
+            this.handleDatabaseError("数据库操作失败: ", e, sql);
+            return false;
+        }
+    }
+
     public void addColumnIfNotExists(String tableName, String columnName, String columnDefinition) {
         if (!this.isColumnExist(tableName, columnName)) {
             if (this.type.equals(DatabaseManager.TYPE.PGSQL)) {

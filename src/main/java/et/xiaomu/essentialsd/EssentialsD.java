@@ -16,6 +16,7 @@ import et.xiaomu.essentialsd.managers.ConfigManager;
 import et.xiaomu.essentialsd.managers.DatabaseTables;
 import et.xiaomu.essentialsd.managers.inspect.InspectManager;
 import et.xiaomu.essentialsd.managers.MuteManager;
+import et.xiaomu.essentialsd.managers.PureManager;
 import et.xiaomu.essentialsd.managers.TeleportManager;
 import et.xiaomu.essentialsd.managers.VanishManager;
 import et.xiaomu.essentialsd.hooks.EssentialsDPlaceholderExpansion;
@@ -45,6 +46,7 @@ public final class EssentialsD extends JavaPlugin {
     public static TeleportManager tpManager;
     public static DatabaseManager database;
     public static MuteManager muteManager;
+    public static PureManager pureManager;
     public static InspectManager inspectManager;
     public static VanishManager vanishManager;
     private EssentialsDPlaceholderExpansion placeholderExpansion;
@@ -64,6 +66,7 @@ public final class EssentialsD extends JavaPlugin {
         database = new DatabaseManager(this, DatabaseManager.TYPE.valueOf(config.getDbType().toUpperCase()), config.getDbHost(), config.getDbPort(), config.getDbName(), config.getDbUser(), config.getDbPass());
         DatabaseTables.migrate();
         muteManager = new MuteManager();
+        pureManager = new PureManager();
         new Scheduler(this);
         tpManager = new TeleportManager();
         inspectManager = new InspectManager();
@@ -86,6 +89,7 @@ public final class EssentialsD extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new CommandPreprocessEvent(), this);
         Bukkit.getPluginManager().registerEvents(new InspectInventoryEvent(), this);
         Bukkit.getPluginManager().registerEvents(new VanishEvent(), this);
+        Bukkit.getPluginManager().registerEvents(new PureEvent(), this);
 
         commands.put("fly", new Fly());
         commands.put("flyspeed", new FlySpeed());
@@ -93,6 +97,8 @@ public final class EssentialsD extends JavaPlugin {
         commands.put("god", new God());
         commands.put("info", new Info());
         commands.put("save", new Save());
+        commands.put("pure", new Pure());
+        commands.put("purelist", new PureList());
         commands.put("heal", new Heal());
         commands.put("more", new More());
         commands.put("inspect", new Inspect());
@@ -172,6 +178,11 @@ public final class EssentialsD extends JavaPlugin {
                 vanishManager.shutdown();
             }
         });
+        shutdownComponent("纯净模式状态", () -> {
+            if (pureManager != null) {
+                pureManager.shutdown();
+            }
+        });
         shutdownComponent("PlaceholderAPI Hook", () -> {
             if (placeholderExpansion != null) {
                 placeholderExpansion.unregister();
@@ -194,6 +205,7 @@ public final class EssentialsD extends JavaPlugin {
         inspectManager = null;
         vanishManager = null;
         muteManager = null;
+        pureManager = null;
         database = null;
         config = null;
         instance = null;

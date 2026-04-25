@@ -51,6 +51,7 @@ public class ConfigManager {
     private Boolean _vanish_allow_vanisher_attack_player;
     private Boolean _vanish_block_private_message_to_vanished;
     private Boolean _vanish_enhanced_mode;
+    private Boolean _chat_pure_enabled;
     public Boolean chat_func_enable;
     public List<String> forbidWords;
     public Map<String, String> replaceWords;
@@ -125,6 +126,7 @@ public class ConfigManager {
         this._vanish_enhanced_mode = this._file.getBoolean("vanish.enhanced-mode", false);
 
         this.chat_func_enable = this._file.getBoolean("chat.Enable", false);
+        this._chat_pure_enabled = this._file.getBoolean("chat.pure.enable", false);
         this.allow_minimessage_perm = this._file.getString("chat.allow-minimessage-perm", "essd.chat.allow-use-minimessage");
 
         this.COOLDOWN_MS = this._file.getLong("chat.cooldown", 2000);
@@ -439,5 +441,9 @@ public class ConfigManager {
 
     public Boolean getVanishEnhancedMode() {
         return this._vanish_enhanced_mode;
+    }
+
+    public Boolean getChatPureEnabled() {
+        return this._chat_pure_enabled;
     }
 }

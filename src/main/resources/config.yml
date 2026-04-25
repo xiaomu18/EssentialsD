@@ -69,6 +69,9 @@ vanish:
 # 聊天功能 (需要安装 PlaceholderAPI)
 chat:
   Enable: false
+  pure:
+    # 是否启用 Pure 纯净模式。关闭后不会应用纯净聊天过滤，且玩家不能开启 /pure。
+    enable: false
   # 聊天格式，可以使用 minimessage 格式
   # 若要使用原生颜色代码必须使用 § 而不是 &
   format:

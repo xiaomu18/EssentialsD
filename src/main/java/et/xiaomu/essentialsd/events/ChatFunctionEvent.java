@@ -7,6 +7,7 @@ import fr.xephi.authme.api.v3.AuthMeApi;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextReplacementConfig;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -14,9 +15,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -97,12 +98,21 @@ public class ChatFunctionEvent implements Listener {
             });
         }
 
+        if (EssentialsD.pureManager.consumeFirstChatNotice(player.getUniqueId())) {
+            player.sendMessage(Component.text(
+                    "你已开启纯净模式，仅位于纯净列表中的玩家可见你的消息，其消息对你可见。使用 /pure 关闭纯净模式，使用 /purelist 命令管理纯净列表。",
+                    NamedTextColor.GRAY
+            ));
+        }
+
         if (!EssentialsD.config.chat_func_enable) {
             if (self_deception) {
                 event.setCancelled(true);
                 player.sendMessage(Component.text("<" + player.getName() + "> " + event.getMessage()));
                 EssentialsD.instance.getServer().getLogger().info("[仅自己可见] " + player.getName() + ": " + event.getMessage());
+                return;
             }
+            filterRecipients(event, player);
             return;
         }
 
@@ -183,9 +193,26 @@ public class ChatFunctionEvent implements Listener {
                 EssentialsD.instance.getServer().getLogger().info("[仅自己可见] " + player.getName() + ": " + event.getMessage());
                 return;
             }
-            // 向全服广播（包括控制台）
-            EssentialsD.instance.getServer().sendMessage(parsed);
+
+            broadcastFiltered(player, parsed, event.getRecipients());
         }
+    }
+
+    private void filterRecipients(AsyncPlayerChatEvent event, Player sender) {
+        if (!EssentialsD.pureManager.isFeatureEnabled()) {
+            return;
+        }
+        event.getRecipients().removeIf(recipient -> !EssentialsD.pureManager.canMutuallySee(sender.getUniqueId(), recipient.getUniqueId()));
+    }
+
+    private void broadcastFiltered(Player sender, Component message, Set<Player> recipients) {
+        for (Player recipient : recipients) {
+            if (!EssentialsD.pureManager.canMutuallySee(sender.getUniqueId(), recipient.getUniqueId())) {
+                continue;
+            }
+            recipient.sendMessage(message);
+        }
+        Bukkit.getConsoleSender().sendMessage(message);
     }
 
     private static String convertLegacyToMiniMessage(String message) {

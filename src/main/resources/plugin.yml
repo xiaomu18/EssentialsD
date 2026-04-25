@@ -29,6 +29,8 @@ permissions:
       essd.clear: true
       essd.clear.other: true
       essd.clear.offline: true
+      essd.pure: true
+      essd.purelist: true
       essd.sit: true
       essd.save: true
       essd.more: true
@@ -87,6 +89,10 @@ permissions:
     default: false
   essd.clear.offline:
     default: op
+  essd.pure:
+    default: true
+  essd.purelist:
+    default: true
   essd.sit:
     default: true
   essd.save:
@@ -189,6 +195,14 @@ commands:
     description: Clear a player's inventory or ender chest
     usage: /clear [player] [--ender] [--confirm]
     permission: essd.clear
+  pure:
+    description: Toggle pure chat mode
+    usage: /pure
+    permission: essd.pure
+  purelist:
+    description: Manage your pure chat list
+    usage: /purelist <add|remove|clear|list> [player]
+    permission: essd.purelist
   sit:
     description: Sit down in place
     usage: /sit
