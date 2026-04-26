@@ -200,20 +200,18 @@ public class VanishManager {
 
     public void handleLogin(Player player) {
         restoreManualState(player);
-        // 登录阶段仅刷新状态与可见性，不触发实体属性读写。
+        // 登录阶段仅刷新状态，不触发依赖完整网络连接的可见性同步。
         // 注意：部分服务端在 Login 阶段 GameMode 可能尚未恢复，Join 阶段会再做一次强制隐身判定兜底。
         refreshForcedState(player, player.getGameMode(), false, false);
         // 明确在 PlayerLoginEvent 阶段设置 VisibleByDefault。
         applyVisibleByDefaultState(player, isVanished(player));
-        // 在玩家真正加入前完成可见性同步，降低隐身泄露窗口。
-        refreshVisibilityFor(player);
     }
 
     public void handleJoin(Player player) {
         // Join 阶段再次基于最终 GameMode 判定强制隐身，修复“首次加入非默认模式未触发强制隐身”问题。
         refreshForcedState(player, player.getGameMode(), false, true);
         boolean vanished = isVanished(player);
-        // Join 阶段兜底刷新一次可见性，避免其他插件在登录链路后覆盖 hide/show 状态。
+        // Join 阶段连接已建立，此时再刷新 hide/show，避免 Login 阶段 connection 仍为空导致 NPE。
         refreshVisibilityFor(player);
         if (vanished) {
             Notification.warn(player, isForced(player.getUniqueId()) ? "你当前处于强制隐身状态" : "你仍处于隐身状态");
