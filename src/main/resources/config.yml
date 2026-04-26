@@ -80,11 +80,16 @@ chat:
     - text: '<%player_name%> $player_message$'
 
   cooldown: 2000 # 毫秒 (1s=1000ms)
+  max-length: 256
+  too-long-message: "消息内容过长，无法发送"
   forbid-keywords:
     - "傻逼"
     - "fuck"
   forbid-message: "请不要说脏话"
+  intercepting-identical-content: false
+  intercept-identical-content-message: "请不要重复发送相同消息"
   # 掩耳盗铃模式: 开启后若被拦截消息仍可以发送，但消息不会被广播，而是仅自己可见
+  # 同样作用于敏感词与重复消息拦截
   self-deception-mode: false
   mute:
     # 留空时使用此默认禁言时长，支持 30m / 1h / 7d / permanent

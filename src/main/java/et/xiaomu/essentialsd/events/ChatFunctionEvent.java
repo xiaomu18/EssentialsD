@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,7 @@ import java.util.regex.Pattern;
 
 public class ChatFunctionEvent implements Listener {
     private final Map<UUID, Long> lastChatTimes = new ConcurrentHashMap<>();
+    private final Map<UUID, String> lastSuccessfulMessages = new ConcurrentHashMap<>();
 
     @EventHandler
     public void onChat(AsyncPlayerChatEvent event) {
@@ -34,6 +36,8 @@ public class ChatFunctionEvent implements Listener {
         }
 
         Player player = event.getPlayer();
+        UUID uuid = player.getUniqueId();
+        String originalMessage = event.getMessage();
         boolean self_deception = false;
 
         if (EssentialsD.vanishManager.isVanished(player) && !EssentialsD.vanishManager.canChatWhileVanished(player)) {
@@ -61,8 +65,6 @@ public class ChatFunctionEvent implements Listener {
         }
 
         if (EssentialsD.config.chat_func_enable && !player.isOp()) {
-            UUID uuid = player.getUniqueId();
-
             // 检查冷却
             if (lastChatTimes.containsKey(uuid)) {
                 long currentTime = System.currentTimeMillis();
@@ -78,6 +80,24 @@ public class ChatFunctionEvent implements Listener {
 
             // 更新最后发言时间
             lastChatTimes.put(uuid, System.currentTimeMillis());
+
+            if (EssentialsD.config.chat_max_length > 0 && originalMessage.length() > EssentialsD.config.chat_max_length) {
+                event.setCancelled(true);
+                Notification.warn(player, EssentialsD.config.chat_too_long_message);
+                return;
+            }
+
+            if (EssentialsD.config.chat_intercepting_identical_content) {
+                String lastSuccessfulMessage = lastSuccessfulMessages.get(uuid);
+                if (lastSuccessfulMessage != null && lastSuccessfulMessage.equals(originalMessage)) {
+                    event.setCancelled(true);
+                    if (!EssentialsD.config.self_deception_mode) {
+                        Notification.warn(player, EssentialsD.config.chat_intercept_identical_content_message);
+                        return;
+                    }
+                    self_deception = true;
+                }
+            }
 
             for (String block_string : EssentialsD.config.forbidWords) {
                 if (event.getMessage().contains(block_string)) {
@@ -112,6 +132,7 @@ public class ChatFunctionEvent implements Listener {
                 EssentialsD.instance.getServer().getLogger().info("[仅自己可见] " + player.getName() + ": " + event.getMessage());
                 return;
             }
+            recordSuccessfulMessage(uuid, originalMessage);
             filterRecipients(event, player);
             return;
         }
@@ -195,7 +216,15 @@ public class ChatFunctionEvent implements Listener {
             }
 
             broadcastFiltered(player, parsed, event.getRecipients());
+            recordSuccessfulMessage(uuid, originalMessage);
         }
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        UUID uuid = event.getPlayer().getUniqueId();
+        lastChatTimes.remove(uuid);
+        lastSuccessfulMessages.remove(uuid);
     }
 
     private void filterRecipients(AsyncPlayerChatEvent event, Player sender) {
@@ -213,6 +242,10 @@ public class ChatFunctionEvent implements Listener {
             recipient.sendMessage(message);
         }
         Bukkit.getConsoleSender().sendMessage(message);
+    }
+
+    private void recordSuccessfulMessage(UUID uuid, String message) {
+        lastSuccessfulMessages.put(uuid, message);
     }
 
     private static String convertLegacyToMiniMessage(String message) {

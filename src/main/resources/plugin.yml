@@ -90,9 +90,9 @@ permissions:
   essd.clear.offline:
     default: op
   essd.pure:
-    default: true
+    default: false
   essd.purelist:
-    default: true
+    default: false
   essd.sit:
     default: true
   essd.save:

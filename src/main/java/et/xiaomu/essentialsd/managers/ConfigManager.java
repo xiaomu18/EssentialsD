@@ -63,6 +63,10 @@ public class ConfigManager {
     public Boolean CMD_ENABLE;
     public String CMD_CD_MESSAGE;
     public String allow_minimessage_perm;
+    public int chat_max_length;
+    public boolean chat_intercepting_identical_content;
+    public String chat_too_long_message;
+    public String chat_intercept_identical_content_message;
     public String MUTE_DEFAULT_DURATION;
     public String MUTE_MODE;
     public List<String> MUTE_BLOCKED_COMMANDS;
@@ -130,6 +134,10 @@ public class ConfigManager {
         this.allow_minimessage_perm = this._file.getString("chat.allow-minimessage-perm", "essd.chat.allow-use-minimessage");
 
         this.COOLDOWN_MS = this._file.getLong("chat.cooldown", 2000);
+        this.chat_max_length = this._file.getInt("chat.max-length", 256);
+        this.chat_intercepting_identical_content = this._file.getBoolean("chat.intercepting-identical-content", false);
+        this.chat_too_long_message = this._file.getString("chat.too-long-message", "消息内容过长，无法发送");
+        this.chat_intercept_identical_content_message = this._file.getString("chat.intercept-identical-content-message", "请不要重复发送相同消息");
 
         this.CMD_ENABLE = this._file.getBoolean("command-manager.Enable", false);
         this.CMD_COOLDOWN_MS = this._file.getLong("command-manager.cooldown", 2000);

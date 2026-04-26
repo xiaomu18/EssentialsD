@@ -28,6 +28,8 @@
 | `/heal [player]` | 治疗自己或目标玩家 | `essd.heal` |
 | `/gamemode <mode> [player]` | 设置游戏模式 | `essd.gamemode` |
 | `/vanish <list\|on\|off> [player]` | 切换隐身状态 | `essd.vanish` |
+| `/pure` | 切换纯净聊天模式 | `essd.pure` |
+| `/purelist <add\|remove\|clear\|list> [player]` | 管理纯净聊天列表 | `essd.purelist` |
 | `/inspect <player> [--ender]` | 查看玩家背包或末影箱 | `essd.inspect` |
 | `/mute ...` | 禁言玩家或 IP | `essd.mute` |
 | `/unmute ...` | 解除禁言 | `essd.unmute` |
@@ -49,7 +51,7 @@
 - 支持隐身增强模式，配合 `ProtocolLib` 在数据包层面隐藏玩家
 - 支持拦截向隐身玩家发送的常见私聊命令
 - 支持隐身时关闭碰撞、禁止攻击玩家、静默打开容器
-- 支持聊天格式自定义、敏感词拦截、敏感词替换、聊天冷却
+- 支持聊天格式自定义、敏感词拦截、敏感词替换、聊天冷却、长度限制、重复消息拦截
 - 支持禁言系统，含临时禁言、永久禁言、IP 禁言、额外禁用命令
 - 支持命令冷却与全局禁用指定一级命令
 - 支持创造模式拿取特定物品或带 NBT 物品的限制
@@ -98,6 +100,8 @@
 | `essd.tp.tpacancel` | `true` | 使用 `/tpacancel` |
 | `essd.tp.rtp` | `true` | 使用 `/rtp` |
 | `essd.tp.back` | `true` | 使用 `/back` |
+| `essd.pure` | `false` | 使用 `/pure` |
+| `essd.purelist` | `false` | 使用 `/purelist` |
 
 ### 管理类权限
 
@@ -166,8 +170,12 @@
 - MiniMessage 与原版 `§` 颜色代码混用
 - 敏感词拦截与替换
 - 聊天冷却
+- 聊天长度限制
+- 重复消息拦截
 - 掩耳盗铃模式
 - 与禁言系统联动
+
+常用聊天配置项包括 `chat.max-length`、`chat.intercepting-identical-content` 与 `chat.self-deception-mode`。
 
 ### command-manager
 
