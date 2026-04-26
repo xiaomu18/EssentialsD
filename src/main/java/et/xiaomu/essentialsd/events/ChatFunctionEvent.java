@@ -10,6 +10,7 @@ import net.kyori.adventure.text.TextReplacementConfig;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -81,7 +82,8 @@ public class ChatFunctionEvent implements Listener {
             // 更新最后发言时间
             lastChatTimes.put(uuid, currentTime);
 
-            if (EssentialsD.config.chat_max_length > 0 && originalMessage.length() > EssentialsD.config.chat_max_length) {
+            if (EssentialsD.config.chat_max_length > 0
+                    && getVisibleMessageLength(originalMessage) > EssentialsD.config.chat_max_length) {
                 event.setCancelled(true);
                 Notification.warn(player, EssentialsD.config.chat_too_long_message);
                 return;
@@ -246,6 +248,13 @@ public class ChatFunctionEvent implements Listener {
 
     private void recordSuccessfulMessage(UUID uuid, String message) {
         lastSuccessfulMessages.put(uuid, message);
+    }
+
+    private static int getVisibleMessageLength(String message) {
+        if (message == null || message.isEmpty()) {
+            return 0;
+        }
+        return ChatColor.stripColor(message).length();
     }
 
     private static String convertLegacyToMiniMessage(String message) {
