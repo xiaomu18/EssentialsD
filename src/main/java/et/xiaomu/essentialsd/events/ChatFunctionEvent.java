@@ -12,6 +12,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -29,11 +30,8 @@ public class ChatFunctionEvent implements Listener {
     private final Map<UUID, Long> lastChatTimes = new ConcurrentHashMap<>();
     private final Map<UUID, String> lastSuccessfulMessages = new ConcurrentHashMap<>();
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onChat(AsyncPlayerChatEvent event) {
-        if (event.isCancelled()) {
-            return;
-        }
 
         Player player = event.getPlayer();
         UUID uuid = player.getUniqueId();

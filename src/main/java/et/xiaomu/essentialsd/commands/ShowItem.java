@@ -4,6 +4,7 @@ import et.xiaomu.essentialsd.EssentialsD;
 import cn.lunadeer.utils.Notification;
 import cn.lunadeer.utils.stui.components.buttons.Button;
 import cn.lunadeer.utils.stui.components.buttons.CommandButton;
+import org.bukkit.Bukkit;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextColor;
@@ -17,13 +18,13 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ShowItem implements CommandExecutor {
     private static final TextColor SHOW_COLOR = TextColor.color(0, 148, 213);
-    public static final Map<String, Inventory> cache = new HashMap<>();
+    public static final Map<String, ShowItemEntry> cache = new ConcurrentHashMap<>();
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
@@ -53,16 +54,34 @@ public class ShowItem implements CommandExecutor {
         TextComponent title = Component.text("物品展示").hoverEvent(Component.text(uuid.toString())).color(SHOW_COLOR);
         Inventory inv = EssentialsD.instance.getServer().createInventory((InventoryHolder) null, 54, title);
         inv.setItem(22, item);
-        cache.put(uuid.toString(), inv);
-        player.getServer().sendMessage(Component.text("玩家 " + player.getName() + " 展示了物品 ").append(show.build()));
+        cache.put(uuid.toString(), new ShowItemEntry(player.getUniqueId(), inv));
+        broadcastFiltered(player, Component.text("玩家 " + player.getName() + " 展示了物品 ").append(show.build()));
         return true;
     }
 
     private static void openView(Player player, String name) {
-        if (!cache.containsKey(name)) {
+        ShowItemEntry entry = cache.get(name);
+        if (entry == null) {
             Notification.warn(player, "物品不存在");
             return;
         }
-        player.openInventory(cache.get(name));
+        if (!EssentialsD.pureManager.canMutuallySee(entry.ownerId(), player.getUniqueId())) {
+            Notification.warn(player, "你无法查看该物品");
+            return;
+        }
+        player.openInventory(entry.inventory());
+    }
+
+    private static void broadcastFiltered(Player sender, Component message) {
+        for (Player recipient : Bukkit.getOnlinePlayers()) {
+            if (!EssentialsD.pureManager.canMutuallySee(sender.getUniqueId(), recipient.getUniqueId())) {
+                continue;
+            }
+            recipient.sendMessage(message);
+        }
+        Bukkit.getConsoleSender().sendMessage(message);
+    }
+
+    public record ShowItemEntry(UUID ownerId, Inventory inventory) {
     }
 }
