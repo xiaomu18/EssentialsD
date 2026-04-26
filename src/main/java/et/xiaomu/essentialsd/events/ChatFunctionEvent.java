@@ -63,12 +63,14 @@ public class ChatFunctionEvent implements Listener {
         }
 
         if (EssentialsD.config.chat_func_enable && !player.isOp()) {
+            long currentTime = System.currentTimeMillis();
+
             // 检查冷却
             if (lastChatTimes.containsKey(uuid)) {
-                long currentTime = System.currentTimeMillis();
                 long lastChatTime = lastChatTimes.get(uuid);
 
                 if (currentTime - lastChatTime < EssentialsD.config.COOLDOWN_MS) {
+                    lastChatTimes.put(uuid, currentTime);
                     // 取消聊天并发送提示
                     event.setCancelled(true);
                     Notification.warn(player, "你发言太快, 请稍等片刻后重新发送");
@@ -77,7 +79,7 @@ public class ChatFunctionEvent implements Listener {
             }
 
             // 更新最后发言时间
-            lastChatTimes.put(uuid, System.currentTimeMillis());
+            lastChatTimes.put(uuid, currentTime);
 
             if (EssentialsD.config.chat_max_length > 0 && originalMessage.length() > EssentialsD.config.chat_max_length) {
                 event.setCancelled(true);

@@ -1,15 +1,7 @@
-
 #插件前缀
 prefix: "[EssentialsD]"
 
-# 数据库配置
-Database:
-  Type: sqlite          # pgsql, sqlite
-  Host: localhost       # 数据库地址
-  Port: 5432            # 数据库端口
-  Name: essentials_d    # 数据库名称
-  User: essentials_d    # 数据库用户名
-  Pass: essentials_d    # 数据库密码
+Debug: false
 
 # 附魔瓶经验值倍率
 ExpBottleRatio: 1.0
@@ -29,6 +21,13 @@ Recipes:
   LightBlock: true              # 光源方块
   StackedEnchantBook: true      # 附魔书堆叠
 
+# 把楼梯当作椅子使用
+Chair:
+  Enable: true
+  MaxWidth: 4
+  SignCheck: false
+  SitHeight: -0.95
+
 # 传送
 Teleport:
   Delay: 0            # 传送延迟 秒
@@ -39,13 +38,6 @@ Teleport:
   log-player-teleport: false # 记录本插件触发的玩家传送日志
   WorldBlackList: [ ] # 不允许传送的世界
 
-# 把楼梯当作椅子使用
-Chair:
-  Enable: true
-  MaxWidth: 4
-  SignCheck: false
-  SitHeight: -0.95
-
 # home 相关限制
 HomeLimit:
   Amount: 5             # 数量限制
@@ -55,16 +47,16 @@ HomeLimit:
 vanish:
   # 是否在玩家游戏模式不同于服务器默认游戏模式时强制开启隐身，有助于管理隐藏
   force-in-different-gamemode: false
+  # 增强隐身方案，底层数据包级拦截，防止作弊客户端获取到隐身玩家信息。需安装 ProtocolLib。
+  enhanced-mode: false
+  # 是否拦截向已隐身玩家发送的常见私聊命令（如 /msg /tell /w）
+  block-private-message-to-vanished: false
   # 在隐身时关闭碰撞，防止推动实体
   disable-collidable: true
   # 是否允许隐身玩家攻击玩家，关闭后将禁止隐身玩家攻击所有玩家
   allow-vanisher-attack-player: true
   # 隐身玩家打开带开合动画的容器时，是否改为无动画打开
   cancel-container-animation: false
-  # 是否拦截向已隐身玩家发送的常见私聊命令（如 /msg /tell /w）
-  block-private-message-to-vanished: false
-  # 增强隐身方案，底层数据包级拦截，防止作弊客户端获取到隐身玩家信息。需安装 ProtocolLib。
-  enhanced-mode: false
 
 # 聊天功能 (需要安装 PlaceholderAPI)
 chat:
@@ -79,15 +71,19 @@ chat:
       permission: "minecraft.command.op"
     - text: '<%player_name%> $player_message$'
 
+  # 拥有此权限的玩家发送 minimessage 格式的消息将会得到解析
+  allow-minimessage-perm: "essd.chat.allow-use-minimessage"
   cooldown: 2000 # 毫秒 (1s=1000ms)
   max-length: 256
   too-long-message: "消息内容过长，无法发送"
+  intercepting-identical-content: false
+  intercept-identical-content-message: "请不要重复发送相同消息"
   forbid-keywords:
     - "傻逼"
     - "fuck"
   forbid-message: "请不要说脏话"
-  intercepting-identical-content: false
-  intercept-identical-content-message: "请不要重复发送相同消息"
+  replace-words:
+    - ["abc1", "abc"]
   # 掩耳盗铃模式: 开启后若被拦截消息仍可以发送，但消息不会被广播，而是仅自己可见
   # 同样作用于敏感词与重复消息拦截
   self-deception-mode: false
@@ -105,11 +101,6 @@ chat:
       - "me"
     block-message: "你已被禁言"
     blocked-command-message: "你已被禁言，暂时无法使用此命令"
-  replace-words:
-    - ["abc1", "abc"]
-
-  # 拥有此权限的玩家发送 minimessage 格式的消息将会得到解析
-  allow-minimessage-perm: "essd.chat.allow-use-minimessage"
 
 command-manager:
   Enable: false
@@ -127,4 +118,11 @@ Creative-ItemTake:
     - "BARRIER"
   banned-nbt: false
 
-Debug: false
+# 数据库配置
+Database:
+  Type: sqlite          # pgsql, sqlite
+  Host: localhost       # 数据库地址
+  Port: 5432            # 数据库端口
+  Name: essentials_d    # 数据库名称
+  User: essentials_d    # 数据库用户名
+  Pass: essentials_d    # 数据库密码

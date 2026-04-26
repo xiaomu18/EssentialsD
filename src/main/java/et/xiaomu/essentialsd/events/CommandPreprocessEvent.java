@@ -68,6 +68,7 @@ public class CommandPreprocessEvent implements Listener {
 
                 // 检查是否仍在冷却中
                 if (currentTime - lastTime < EssentialsD.config.CMD_COOLDOWN_MS) {
+                    lastCommandTime.put(player.getUniqueId(), currentTime);
                     event.setCancelled(true);
                     player.sendMessage(EssentialsD.config.CMD_CD_MESSAGE);
                     return;
