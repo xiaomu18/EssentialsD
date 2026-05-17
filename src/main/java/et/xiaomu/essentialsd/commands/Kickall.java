@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 public class Kickall implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 0) {
-            Notification.error(sender, "用法: /kickall <reason>");
+            Notification.errorKey(sender, "messages.kickall.usage");
             return true;
         }
         String reason = ChatColor.translateAlternateColorCodes('&', String.join(" ", args));
@@ -27,7 +27,7 @@ public class Kickall implements CommandExecutor {
             }
         });
 
-        Notification.info(sender, "正在清空服务器...");
+        Notification.infoKey(sender, "messages.kickall.running");
         return true;
     }
 }

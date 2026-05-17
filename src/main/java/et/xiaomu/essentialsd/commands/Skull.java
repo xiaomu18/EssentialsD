@@ -17,7 +17,7 @@ import java.util.Map;
 public class Skull implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player)) {
-            Notification.warn(sender, "只有玩家可以使用此命令");
+            Notification.warnKey(sender, "messages.common.player_only_command");
             return true;
         } else {
             Player player = (Player) sender;
@@ -34,7 +34,7 @@ public class Skull implements CommandExecutor {
             skulls.putAll(dragon_skulls);
             skulls.putAll(wither_skulls);
             if (skulls.isEmpty()) {
-                Notification.warn(player, "你的背包中没有可以用来交换的头颅");
+                Notification.warnKey(player, "messages.skull.no_exchangeable_skull");
                 return true;
             } else {
                 ItemStack skull = ((ItemStack[]) skulls.values().toArray(new ItemStack[0]))[0];
@@ -46,7 +46,7 @@ public class Skull implements CommandExecutor {
 
                 ItemStack player_skull = getPlayerSkull(player);
                 player.getWorld().dropItem(player.getLocation(), player_skull);
-                Notification.info(player, "交换成功");
+                Notification.infoKey(player, "messages.skull.success");
                 return true;
             }
         }

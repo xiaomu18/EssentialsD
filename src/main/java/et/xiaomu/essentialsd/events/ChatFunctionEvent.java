@@ -41,14 +41,14 @@ public class ChatFunctionEvent implements Listener {
 
         if (EssentialsD.vanishManager.isVanished(player) && !EssentialsD.vanishManager.canChatWhileVanished(player)) {
             event.setCancelled(true);
-            Notification.warn(player, "你当前处于隐身状态，无法在公屏发言");
+            Notification.warnKey(player, "messages.chat.vanished_blocked");
             return;
         }
 
         if (Bukkit.getPluginManager().isPluginEnabled("AuthMe")) {
             if (!AuthMeApi.getInstance().isAuthenticated(player)) {
                 event.setCancelled(true);
-                Notification.warn(player, "请先完成登录验证再尝试发送消息");
+                Notification.warnKey(player, "messages.chat.authme_not_logged_in");
                 return;
             }
         }
@@ -56,7 +56,7 @@ public class ChatFunctionEvent implements Listener {
         MuteManager.Entry muteEntry = EssentialsD.muteManager.getMute(player);
         if (muteEntry != null) {
             if (!EssentialsD.muteManager.isSelfDeceptionMode()) {
-                Notification.warn(player, EssentialsD.config.MUTE_BLOCK_MESSAGE);
+                Notification.warnKey(player, "messages.mute.blocked");
                 event.setCancelled(true);
                 return;
             }
@@ -74,7 +74,7 @@ public class ChatFunctionEvent implements Listener {
                     lastChatTimes.put(uuid, currentTime);
                     // 取消聊天并发送提示
                     event.setCancelled(true);
-                    Notification.warn(player, "你发言太快, 请稍等片刻后重新发送");
+                    Notification.warnKey(player, "messages.chat.cooldown");
                     return;
                 }
             }
@@ -85,7 +85,7 @@ public class ChatFunctionEvent implements Listener {
             if (EssentialsD.config.chat_max_length > 0
                     && getVisibleMessageLength(originalMessage) > EssentialsD.config.chat_max_length) {
                 event.setCancelled(true);
-                Notification.warn(player, EssentialsD.config.chat_too_long_message);
+                Notification.warnKey(player, "messages.chat.too_long");
                 return;
             }
 
@@ -94,7 +94,7 @@ public class ChatFunctionEvent implements Listener {
                 if (lastSuccessfulMessage != null && lastSuccessfulMessage.equals(originalMessage)) {
                     event.setCancelled(true);
                     if (!EssentialsD.config.self_deception_mode) {
-                        Notification.warn(player, EssentialsD.config.chat_intercept_identical_content_message);
+                        Notification.warnKey(player, "messages.chat.duplicate");
                         return;
                     }
                     self_deception = true;
@@ -105,7 +105,7 @@ public class ChatFunctionEvent implements Listener {
                 if (event.getMessage().contains(block_string)) {
                     event.setCancelled(true);
                     if (!EssentialsD.config.self_deception_mode) {
-                        Notification.warn(player, EssentialsD.config.forbidMessage);
+                        Notification.warnKey(player, "messages.chat.forbid");
                         return;
                     } else {
                         self_deception = true;
@@ -122,7 +122,7 @@ public class ChatFunctionEvent implements Listener {
 
         if (EssentialsD.pureManager.consumeFirstChatNotice(player.getUniqueId())) {
             player.sendMessage(Component.text(
-                    "你已开启纯净模式，仅位于纯净列表中的玩家可见你的消息，其消息对你可见。使用 /pure 关闭纯净模式，使用 /purelist 命令管理纯净列表。",
+                    EssentialsD.localization.get("messages.chat.pure_notice"),
                     NamedTextColor.GRAY
             ));
         }

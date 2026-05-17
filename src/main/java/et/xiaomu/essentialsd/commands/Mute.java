@@ -49,12 +49,12 @@ public class Mute implements TabExecutor {
 
             ResolvedIpTarget resolved = resolveIpTarget(args[1]);
             if (resolved == null) {
-                Notification.error(sender, "无法解析目标 IP，请提供在线玩家名、最近登录过的玩家名或直接输入 IP");
+                Notification.errorKey(sender, "messages.mute.resolve_ip_failed");
                 return true;
             }
 
             EssentialsD.muteManager.muteIp(resolved.ip(), resolved.name(), duration.getDurationMillis(), sender.getName());
-            Notification.warn(sender, "已禁言 IP %s，持续 %s", resolved.ip(), MuteDuration.formatDuration(duration.getDurationMillis()));
+            Notification.warnKey(sender, "messages.mute.ip_muted", resolved.ip(), MuteDuration.formatDuration(duration.getDurationMillis()));
             return true;
         }
 
@@ -70,7 +70,7 @@ public class Mute implements TabExecutor {
         if (playerName == null || playerName.isBlank()) {
             playerName = player.getUniqueId().toString();
         }
-        Notification.warn(sender, "已禁言玩家 %s，持续 %s", playerName, MuteDuration.formatDuration(duration.getDurationMillis()));
+        Notification.warnKey(sender, "messages.mute.player_muted", playerName, MuteDuration.formatDuration(duration.getDurationMillis()));
         return true;
     }
 
@@ -87,14 +87,14 @@ public class Mute implements TabExecutor {
 
             ResolvedIpTarget resolved = resolveIpTarget(args[1]);
             if (resolved == null) {
-                Notification.error(sender, "无法解析目标 IP");
+                Notification.errorKey(sender, "messages.mute.resolve_ip_simple_failed");
                 return true;
             }
 
             if (EssentialsD.muteManager.unmuteIp(resolved.ip())) {
-                Notification.info(sender, "已取消禁言 IP %s", resolved.ip());
+                Notification.infoKey(sender, "messages.mute.ip_unmuted", resolved.ip());
             } else {
-                Notification.error(sender, "取消禁言失败");
+                Notification.errorKey(sender, "messages.mute.unmute_failed");
             }
             return true;
         }
@@ -105,9 +105,9 @@ public class Mute implements TabExecutor {
             if (playerName == null || playerName.isBlank()) {
                 playerName = player.getUniqueId().toString();
             }
-            Notification.info(sender, "已取消禁言 %s", playerName);
+            Notification.infoKey(sender, "messages.mute.player_unmuted", playerName);
         } else {
-            Notification.error(sender, "取消禁言失败");
+            Notification.errorKey(sender, "messages.mute.unmute_failed");
         }
         return true;
     }
@@ -152,30 +152,32 @@ public class Mute implements TabExecutor {
     }
 
     private void showMuteUsage(CommandSender sender) {
-        Notification.info(sender, "用法:");
-        Notification.info(sender, "/mute ls 查看当前禁言列表");
-        Notification.info(sender, "/mute <player> [时长] 禁言玩家");
-        Notification.info(sender, "/mute ip <player/ip> [时长] 禁言 IP");
-        Notification.info(sender, "时长示例: 30m, 1h, 7d, permanent，留空则使用默认时长 %s", EssentialsD.config.MUTE_DEFAULT_DURATION);
+        Notification.infoKey(sender, "messages.mute.usage_header");
+        Notification.infoKey(sender, "messages.mute.usage_list");
+        Notification.infoKey(sender, "messages.mute.usage_player");
+        Notification.infoKey(sender, "messages.mute.usage_ip");
+        Notification.infoKey(sender, "messages.mute.usage_duration_examples", EssentialsD.config.MUTE_DEFAULT_DURATION);
     }
 
     private void showUnmuteUsage(CommandSender sender) {
-        Notification.info(sender, "用法:");
-        Notification.info(sender, "/unmute <player> 取消禁言玩家");
-        Notification.info(sender, "/unmute ip <player/ip> 取消禁言 IP");
+        Notification.infoKey(sender, "messages.mute.usage_header");
+        Notification.infoKey(sender, "messages.mute.unmute_usage_player");
+        Notification.infoKey(sender, "messages.mute.unmute_usage_ip");
     }
 
     private void showMuteList(CommandSender sender) {
         List<MuteManager.Entry> entries = EssentialsD.muteManager.getActiveMutes();
         if (entries.isEmpty()) {
-            Notification.info(sender, "当前没有生效中的禁言");
+            Notification.infoKey(sender, "messages.mute.list_empty");
             return;
         }
 
-        Notification.info(sender, "当前生效中的禁言 (%d):", entries.size());
+        Notification.infoKey(sender, "messages.mute.list_header", entries.size());
         for (MuteManager.Entry entry : entries) {
-            String type = entry.targetType == MuteManager.TargetType.PLAYER ? "玩家" : "IP";
-            Notification.info(sender, "[%s] %s | 剩余: %s", type, entry.getDisplayName(), entry.getRemainingText());
+            String type = entry.targetType == MuteManager.TargetType.PLAYER
+                    ? EssentialsD.localization.get("ui.mute.type_player")
+                    : EssentialsD.localization.get("ui.mute.type_ip");
+            Notification.infoKey(sender, "messages.mute.list_entry", type, entry.getDisplayName(), entry.getRemainingText());
         }
     }
 
@@ -185,8 +187,8 @@ public class Mute implements TabExecutor {
         if (result.isValid()) {
             return result;
         }
-        Notification.error(sender, "无效的时长格式: %s", raw);
-        Notification.info(sender, "支持示例: 30m, 1h, 7d, permanent");
+        Notification.errorKey(sender, "messages.mute.invalid_duration", raw);
+        Notification.infoKey(sender, "messages.mute.duration_examples");
         return null;
     }
 

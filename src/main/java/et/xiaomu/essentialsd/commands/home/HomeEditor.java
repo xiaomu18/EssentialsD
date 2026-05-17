@@ -19,7 +19,7 @@ public class HomeEditor implements TabExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length < 2) {
-            Notification.warn(sender, "错误的参数");
+            Notification.warnKey(sender, "messages.home_editor.invalid_args");
             return true;
         }
 
@@ -28,36 +28,36 @@ public class HomeEditor implements TabExecutor {
 
         if (args[1].equals("tp")) {
             if (args.length < 3) {
-                Notification.warn(sender, "错误的参数");
+                Notification.warnKey(sender, "messages.home_editor.invalid_args");
                 return true;
             }
             if (!(sender instanceof Player commandPlayer)) {
-                Notification.warn(sender, "仅玩家可使用此命令");
+                Notification.warnKey(sender, "messages.home_editor.player_only_tp");
                 return true;
             }
             for (HomeInfo home : homes) {
                 if (home.homeName.equals(args[2])) {
                     if (EssentialsD.config.getHomeWorldBlacklist().contains(home.location.getWorld().getName())) {
-                        Notification.warn(sender, "玩家 %s 的家 %s 位于禁止传送的世界 %s", player.getName(), home.homeName, home.location.getWorld().getName());
+                        Notification.warnKey(sender, "messages.home_editor.world_blocked", player.getName(), home.homeName, home.location.getWorld().getName());
                         return true;
                     }
                     EssentialsD.tpManager.doTeleportDelayed(commandPlayer, home.location, 0,
-                            () -> Notification.info(sender, "正在传送..."),
-                            () -> Notification.info(sender, "成功传送到 %s 的家 %s", player.getName(), home.homeName),
+                            () -> Notification.infoKey(sender, "messages.home_editor.teleporting"),
+                            () -> Notification.infoKey(sender, "messages.home_editor.teleported", player.getName(), home.homeName),
                             EssentialsD.tpManager.createLogContext("home-editor:" + player.getName() + "/" + home.homeName));
                     return true;
                 }
             }
-            Notification.warn(sender, "玩家 %s 没有名为 %s 的家", player.getName(), args[2]);
+            Notification.warnKey(sender, "messages.home_editor.not_found", player.getName(), args[2]);
             return true;
         }
 
         if (args[1].equals("view")) {
-            Notification.info(sender, "玩家 %s 共有 %d 个家：", player.getName(), homes.size());
+            Notification.infoKey(sender, "messages.home_editor.view_header", player.getName(), homes.size());
             int n = 0;
             for (HomeInfo home : homes) {
                 n++;
-                Notification.info(sender, "[%d] %s | 位置: %s %d, %d, %d", n, home.homeName, home.location.getWorld().getName(),
+                Notification.infoKey(sender, "messages.home_editor.view_entry", n, home.homeName, home.location.getWorld().getName(),
                         (int) home.location.getX(), (int) home.location.getY(), (int) home.location.getZ());
             }
             return true;
@@ -65,24 +65,24 @@ public class HomeEditor implements TabExecutor {
 
         if (args[1].equals("remove")) {
             if (args.length < 3) {
-                Notification.warn(sender, "错误的参数");
+                Notification.warnKey(sender, "messages.home_editor.invalid_args");
                 return true;
             }
             for (HomeInfo home : homes) {
                 if (home.homeName.equals(args[2])) {
                     if (HomeInfo.deleteHome(player.getUniqueId(), home.homeName)) {
-                        Notification.info(sender, "成功删除玩家 %s 的家 %s", player.getName(), home.homeName);
+                        Notification.infoKey(sender, "messages.home_editor.deleted", player.getName(), home.homeName);
                     } else {
-                        Notification.error(sender, "删除失败");
+                        Notification.errorKey(sender, "messages.home_editor.delete_failed");
                     }
                     return true;
                 }
             }
-            Notification.warn(sender, "玩家 %s 没有名为 %s 的家", player.getName(), args[2]);
+            Notification.warnKey(sender, "messages.home_editor.not_found", player.getName(), args[2]);
             return true;
         }
 
-        Notification.warn(sender, "未知用法");
+        Notification.warnKey(sender, "messages.home_editor.unknown_usage");
         return true;
     }
 

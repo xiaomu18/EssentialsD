@@ -14,14 +14,14 @@ import org.jetbrains.annotations.NotNull;
 public class EnderChest implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player)) {
-            Notification.error(sender, "只有玩家才能使用这个命令");
+            Notification.errorKey(sender, "messages.common.player_only_command");
             return false;
         } else {
             Player player = (Player) sender;
             Inventory chest = player.getEnderChest();
             InventoryView view = player.openInventory(chest);
             if (view == null) {
-                Notification.error(sender, "无法打开末影箱");
+                Notification.errorKey(sender, "messages.enderchest.open_failed");
                 return false;
             } else {
                 InventoryOpenEvent event = new InventoryOpenEvent(view);

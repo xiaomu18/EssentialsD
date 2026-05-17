@@ -24,7 +24,7 @@ public class PureList implements TabExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
-            Notification.error(sender, "该命令只能由玩家执行");
+            Notification.errorKey(sender, "messages.pure.player_only");
             return true;
         }
         if (args.length == 0) {
@@ -75,30 +75,30 @@ public class PureList implements TabExecutor {
 
         OfflinePlayer target = PlayerLookup.resolve(args[1]);
         if (target == null) {
-            Notification.error(player, "未找到玩家 %s", args[1]);
+            Notification.errorKey(player, "messages.pure_list.player_not_found", args[1]);
             return true;
         }
         if (player.getUniqueId().equals(target.getUniqueId())) {
-            Notification.warn(player, "无需将自己加入纯净列表");
+            Notification.warnKey(player, "messages.pure_list.add_self_forbidden");
             return true;
         }
         if (EssentialsD.pureManager.isListed(player.getUniqueId(), target.getUniqueId())) {
-            Notification.warn(player, "%s 已在你的纯净列表中", PlayerLookup.displayName(target));
+            Notification.warnKey(player, "messages.pure_list.already_listed", PlayerLookup.displayName(target));
             return true;
         }
         if (!ensureKnownPlayer(player.getUniqueId(), player.getName())) {
-            Notification.error(player, "无法保存你的纯净列表，请稍后重试");
+            Notification.errorKey(player, "messages.pure_list.save_owner_failed");
             return true;
         }
         if (!ensureKnownPlayer(target.getUniqueId(), PlayerLookup.displayName(target))) {
-            Notification.error(player, "无法保存该玩家到纯净列表，请稍后重试");
+            Notification.errorKey(player, "messages.pure_list.save_target_failed");
             return true;
         }
         if (!EssentialsD.pureManager.addToList(player.getUniqueId(), target.getUniqueId())) {
-            Notification.error(player, "添加纯净列表失败，请稍后重试");
+            Notification.errorKey(player, "messages.pure_list.add_failed");
             return true;
         }
-        Notification.info(player, "已将 %s 加入你的纯净列表", PlayerLookup.displayName(target));
+        Notification.infoKey(player, "messages.pure_list.added", PlayerLookup.displayName(target));
         return true;
     }
 
@@ -110,18 +110,18 @@ public class PureList implements TabExecutor {
 
         OfflinePlayer target = PlayerLookup.resolve(args[1]);
         if (target == null) {
-            Notification.error(player, "未找到玩家 %s", args[1]);
+            Notification.errorKey(player, "messages.pure_list.player_not_found", args[1]);
             return true;
         }
         if (!EssentialsD.pureManager.isListed(player.getUniqueId(), target.getUniqueId())) {
-            Notification.warn(player, "%s 不在你的纯净列表中", PlayerLookup.displayName(target));
+            Notification.warnKey(player, "messages.pure_list.not_listed", PlayerLookup.displayName(target));
             return true;
         }
         if (!EssentialsD.pureManager.removeFromList(player.getUniqueId(), target.getUniqueId())) {
-            Notification.error(player, "移除纯净列表失败，请稍后重试");
+            Notification.errorKey(player, "messages.pure_list.remove_failed");
             return true;
         }
-        Notification.info(player, "已将 %s 从你的纯净列表移除", PlayerLookup.displayName(target));
+        Notification.infoKey(player, "messages.pure_list.removed", PlayerLookup.displayName(target));
         return true;
     }
 
@@ -132,14 +132,14 @@ public class PureList implements TabExecutor {
         }
         List<UUID> entries = EssentialsD.pureManager.getListedPlayers(player.getUniqueId());
         if (entries.isEmpty()) {
-            Notification.warn(player, "你的纯净列表已经是空的");
+            Notification.warnKey(player, "messages.pure_list.already_empty");
             return true;
         }
         if (!EssentialsD.pureManager.clearList(player.getUniqueId())) {
-            Notification.error(player, "清空纯净列表失败，请稍后重试");
+            Notification.errorKey(player, "messages.pure_list.clear_failed");
             return true;
         }
-        Notification.info(player, "已清空你的纯净列表");
+        Notification.infoKey(player, "messages.pure_list.cleared");
         return true;
     }
 
@@ -154,15 +154,16 @@ public class PureList implements TabExecutor {
                 .toList();
 
         boolean enabled = EssentialsD.pureManager.isEnabled(player);
-        Notification.info(player, Component.text("纯净模式: ", NamedTextColor.GRAY)
-                .append(Component.text(enabled ? "开启" : "关闭", enabled ? NamedTextColor.GREEN : NamedTextColor.RED))
-                .append(Component.text(EssentialsD.pureManager.isFeatureEnabled() ? "" : " [服务器未启用]", NamedTextColor.GOLD)));
+        Notification.info(player, Component.text(EssentialsD.localization.get("ui.pure_list.mode_label"), NamedTextColor.GRAY)
+                .append(Component.text(enabled ? EssentialsD.localization.get("common.enabled") : EssentialsD.localization.get("common.disabled"),
+                        enabled ? NamedTextColor.GREEN : NamedTextColor.RED))
+                .append(Component.text(EssentialsD.pureManager.isFeatureEnabled() ? "" : EssentialsD.localization.get("ui.pure_list.server_disabled_suffix"), NamedTextColor.GOLD)));
         if (entries.isEmpty()) {
-            Notification.info(player, "你的纯净列表当前为空");
+            Notification.infoKey(player, "messages.pure_list.empty");
             return true;
         }
 
-        Notification.info(player, Component.text("纯净列表 ", NamedTextColor.GRAY)
+        Notification.info(player, Component.text(EssentialsD.localization.get("ui.pure_list.title"), NamedTextColor.GRAY)
                 .append(Component.text("(" + entries.size() + ")", NamedTextColor.YELLOW)));
         for (UUID targetId : entries) {
             Notification.info(player, formatEntryLine(player.getUniqueId(), targetId));
@@ -171,7 +172,7 @@ public class PureList implements TabExecutor {
     }
 
     private void sendUsage(Player player) {
-        Notification.info(player, "用法: /purelist <add|remove|clear|list> [玩家]");
+        Notification.infoKey(player, "messages.pure_list.usage");
     }
 
     private boolean ensureKnownPlayer(UUID uuid, String fallbackName) {
@@ -198,11 +199,11 @@ public class PureList implements TabExecutor {
         Component line = Component.text(" - ", NamedTextColor.DARK_GRAY)
                 .append(Component.text(resolveName(targetId), NamedTextColor.YELLOW))
                 .append(Component.text(" ", NamedTextColor.GRAY))
-                .append(Component.text(mutuallyVisible ? "[互相可见]" : "[对方未添加你]",
+                .append(Component.text(mutuallyVisible ? EssentialsD.localization.get("ui.pure_list.entry_mutual_visible") : EssentialsD.localization.get("ui.pure_list.entry_not_mutual"),
                         mutuallyVisible ? NamedTextColor.GREEN : NamedTextColor.RED));
 
         if (targetPureEnabled) {
-            line = line.append(Component.text("[纯净模式]", NamedTextColor.GREEN));
+            line = line.append(Component.text(EssentialsD.localization.get("ui.pure_list.entry_pure_mode"), NamedTextColor.GREEN));
         }
         return line;
     }

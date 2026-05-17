@@ -2,6 +2,7 @@ package et.xiaomu.essentialsd.managers.inspect;
 
 import cn.lunadeer.utils.Notification;
 import cn.lunadeer.utils.Scheduler;
+import et.xiaomu.essentialsd.EssentialsD;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -89,7 +90,7 @@ public class InspectManager {
         if (target.isOnline()) {
             Player onlineTarget = target.getPlayer();
             if (onlineTarget == null) {
-                Notification.error(viewer, "无法读取玩家 %s 的数据", displayName(target));
+                Notification.errorKey(viewer, "messages.inspect.read_online_failed", displayName(target));
                 return;
             }
             OnlineInspectDataSource source = new OnlineInspectDataSource(onlineTarget, mode);
@@ -98,7 +99,7 @@ public class InspectManager {
                     return;
                 }
                 if (!source.isOnline()) {
-                    Notification.warn(viewer, "玩家 %s 已下线，无法打开检查界面", source.displayName());
+                    Notification.warnKey(viewer, "messages.inspect.target_logged_out_before_open", source.displayName());
                     return;
                 }
                 openSession(viewer, source, writable);
@@ -113,7 +114,7 @@ public class InspectManager {
                     return;
                 }
                 if (source == null) {
-                    Notification.error(viewer, "无法读取玩家 %s 的离线数据", displayName(target));
+                    Notification.errorKey(viewer, "messages.inspect.read_offline_failed", displayName(target));
                     return;
                 }
                 openSession(viewer, source, false);
@@ -216,17 +217,17 @@ public class InspectManager {
     static ItemStack createInfoItem(InspectDataSource source, boolean readOnly) {
         ItemStack item = new ItemStack(source.mode() == Mode.ENDER_CHEST ? Material.ENDER_CHEST : Material.CHEST);
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(Component.text("检查目标信息", NamedTextColor.GOLD));
+        meta.displayName(Component.text(EssentialsD.localization.get("ui.inspect.info_title"), NamedTextColor.GOLD));
         List<Component> lore = new ArrayList<>();
-        lore.add(Component.text("目标: ", NamedTextColor.DARK_GRAY)
+        lore.add(Component.text(EssentialsD.localization.get("ui.inspect.target_label"), NamedTextColor.DARK_GRAY)
                 .append(Component.text(source.displayName(), NamedTextColor.YELLOW)));
-        lore.add(Component.text("容器: ", NamedTextColor.DARK_GRAY)
-                .append(Component.text(source.mode() == Mode.ENDER_CHEST ? "末影箱" : "背包", NamedTextColor.AQUA)));
-        lore.add(Component.text("状态: ", NamedTextColor.DARK_GRAY)
-                .append(Component.text(source.isOnline() ? "在线" : "离线",
+        lore.add(Component.text(EssentialsD.localization.get("ui.inspect.container_label"), NamedTextColor.DARK_GRAY)
+                .append(Component.text(source.mode() == Mode.ENDER_CHEST ? EssentialsD.localization.get("ui.inspect.container_ender") : EssentialsD.localization.get("ui.inspect.container_inventory"), NamedTextColor.AQUA)));
+        lore.add(Component.text(EssentialsD.localization.get("ui.inspect.status_label"), NamedTextColor.DARK_GRAY)
+                .append(Component.text(source.isOnline() ? EssentialsD.localization.get("common.online") : EssentialsD.localization.get("common.offline"),
                         source.isOnline() ? NamedTextColor.GREEN : NamedTextColor.RED)));
-        lore.add(Component.text("权限: ", NamedTextColor.DARK_GRAY)
-                .append(Component.text(readOnly ? "只读模式" : "读写模式",
+        lore.add(Component.text(EssentialsD.localization.get("ui.inspect.mode_label"), NamedTextColor.DARK_GRAY)
+                .append(Component.text(readOnly ? EssentialsD.localization.get("ui.inspect.mode_read_only") : EssentialsD.localization.get("ui.inspect.mode_read_write"),
                         readOnly ? NamedTextColor.RED : NamedTextColor.GREEN)));
         meta.lore(lore);
         item.setItemMeta(meta);
@@ -234,13 +235,16 @@ public class InspectManager {
     }
 
     static Component createTitle(InspectDataSource source, boolean readOnly) {
+        String containerName = source.mode() == Mode.ENDER_CHEST
+                ? EssentialsD.localization.get("ui.inspect.container_ender")
+                : EssentialsD.localization.get("ui.inspect.container_inventory");
         TextComponent.Builder builder = Component.text();
         builder.append(Component.text(source.displayName(), NamedTextColor.YELLOW));
         builder.append(Component.text("[", NamedTextColor.WHITE));
-        builder.append(Component.text(source.isOnline() ? "在线" : "离线",
+        builder.append(Component.text(source.isOnline() ? EssentialsD.localization.get("common.online") : EssentialsD.localization.get("common.offline"),
                 source.isOnline() ? NamedTextColor.GREEN : NamedTextColor.RED));
-        builder.append(Component.text("] 的" + (source.mode() == Mode.ENDER_CHEST ? "末影箱 " : "背包 "), NamedTextColor.WHITE));
-        builder.append(Component.text(readOnly ? "[只读]" : "[读写模式]", NamedTextColor.DARK_GRAY));
+        builder.append(Component.text("] " + containerName + " ", NamedTextColor.WHITE));
+        builder.append(Component.text(readOnly ? EssentialsD.localization.get("ui.inspect.title_read_only_suffix") : EssentialsD.localization.get("ui.inspect.title_read_write_suffix"), NamedTextColor.DARK_GRAY));
         return builder.build();
     }
 
@@ -261,7 +265,8 @@ public class InspectManager {
         sessions.put(viewer.getUniqueId(), session);
         session.renderFromSource();
         viewer.openInventory(session.inventory());
-        Notification.info(viewer, "已打开 %s 的%s", source.displayName(), source.mode() == Mode.ENDER_CHEST ? "末影箱" : "背包");
+        Notification.infoKey(viewer, "messages.inspect.opened", source.displayName(),
+                source.mode() == Mode.ENDER_CHEST ? EssentialsD.localization.get("ui.inspect.container_ender") : EssentialsD.localization.get("ui.inspect.container_inventory"));
     }
 
     private void closeSession(UUID viewerId) {
@@ -297,7 +302,7 @@ public class InspectManager {
                 Scheduler.runEntityTask(viewer, () -> {
                     if (viewer.getOpenInventory().getTopInventory() == session.inventory()) {
                         viewer.closeInventory();
-                        Notification.warn(viewer, "%s 已下线，检查界面已关闭", session.source().displayName());
+                        Notification.warnKey(viewer, "messages.inspect.target_logged_out_closed", session.source().displayName());
                     }
                 });
                 session.close();

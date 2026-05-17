@@ -50,7 +50,7 @@ public class VanishManager {
     private final Map<UUID, Map<UUID, Long>> pendingPlayerInfoRemoveByViewer = new ConcurrentHashMap<>();
     private final Map<UUID, Map<Integer, Long>> pendingEntityDestroyByViewer = new ConcurrentHashMap<>();
     private final Map<UUID, SilentContainerSession> silentContainerSessions = new ConcurrentHashMap<>();
-    private final BossBar bossBar = Bukkit.createBossBar("§7你正处于隐身状态", BarColor.WHITE, BarStyle.SEGMENTED_6);
+    private final BossBar bossBar = Bukkit.createBossBar("§7" + EssentialsD.localization.get("ui.vanish.bossbar"), BarColor.WHITE, BarStyle.SEGMENTED_6);
     private VanishProtocolEnhancer protocolEnhancer;
     private static final long PENDING_REMOVE_TTL_MS = 5000L;
 
@@ -188,11 +188,11 @@ public class VanishManager {
 
         if (notify && forcedChanged) {
             if (shouldForce) {
-                Notification.warn(player, "你当前游戏模式不同于服务器默认游戏模式，已强制开启隐身");
+                Notification.warnKey(player, "messages.vanish.forced_enabled");
             } else {
-                Notification.info(player, isVanished
-                        ? "你的游戏模式已恢复为默认模式，强制隐身已解除，隐身状态保持开启"
-                        : "你的游戏模式已恢复为默认模式，强制隐身已解除");
+                Notification.infoKey(player, isVanished
+                        ? "messages.vanish.forced_removed_kept"
+                        : "messages.vanish.forced_removed");
             }
         }
         return forcedChanged || autoEnabledByForce;
@@ -214,7 +214,7 @@ public class VanishManager {
         // Join 阶段连接已建立，此时再刷新 hide/show，避免 Login 阶段 connection 仍为空导致 NPE。
         refreshVisibilityFor(player);
         if (vanished) {
-            Notification.warn(player, isForced(player.getUniqueId()) ? "你当前处于强制隐身状态" : "你仍处于隐身状态");
+            Notification.warnKey(player, isForced(player.getUniqueId()) ? "messages.vanish.join_forced" : "messages.vanish.join_still");
         }
     }
 
@@ -248,7 +248,7 @@ public class VanishManager {
         mirrorInventory.setContents(cloneContents(sourceInventory.getContents()));
         silentContainerSessions.put(player.getUniqueId(), new SilentContainerSession(sourceInventory, mirrorInventory));
         player.openInventory(mirrorInventory);
-        Notification.info(player, Component.text("你悄悄地打开了 ").append(Component.translatable(clickedBlock.getType().translationKey())));
+        Notification.info(player, Component.text(EssentialsD.localization.get("messages.vanish.silent_open_prefix")).append(Component.translatable(clickedBlock.getType().translationKey())));
         return true;
     }
 
@@ -268,6 +268,7 @@ public class VanishManager {
     }
 
     public void reload() {
+        bossBar.setTitle("§7" + EssentialsD.localization.get("ui.vanish.bossbar"));
         refreshEnhancedModeState();
         for (Player player : new ArrayList<>(Bukkit.getOnlinePlayers())) {
             restoreManualState(player);

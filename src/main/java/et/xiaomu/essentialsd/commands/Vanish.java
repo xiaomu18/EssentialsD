@@ -65,16 +65,16 @@ public class Vanish implements TabExecutor {
             return true;
         }
         if (!EssentialsD.vanishManager.canSeeVanished(sender)) {
-            Notification.error(sender, "你没有权限查看隐身玩家列表");
+            Notification.errorKey(sender, "messages.vanish.no_permission_list");
             return true;
         }
         List<Player> vanishedPlayers = EssentialsD.vanishManager.getVanishedPlayers();
         if (vanishedPlayers.isEmpty()) {
-            Notification.info(sender, "当前没有隐身中的在线玩家");
+            Notification.infoKey(sender, "messages.vanish.none_online");
             return true;
         }
 
-        Notification.info(sender, Component.text("隐身玩家列表 ", NamedTextColor.GRAY)
+        Notification.info(sender, Component.text(EssentialsD.localization.get("ui.vanish.list_title"), NamedTextColor.GRAY)
                 .append(Component.text("(" + vanishedPlayers.size() + ")", NamedTextColor.YELLOW)));
         for (Player player : vanishedPlayers) {
             Notification.info(sender, formatPlayerLine(player));
@@ -86,18 +86,18 @@ public class Vanish implements TabExecutor {
         Player target;
         if (args.length == 1) {
             if (!(sender instanceof Player player)) {
-                Notification.error(sender, "控制台必须指定目标玩家");
+                Notification.errorKey(sender, "messages.vanish.console_requires_player");
                 return true;
             }
             target = player;
         } else if (args.length == 2) {
             if (!sender.hasPermission(VanishManager.PERMISSION_OTHER)) {
-                Notification.error(sender, "你没有权限修改其他玩家的隐身状态");
+                Notification.errorKey(sender, "messages.vanish.no_permission_other");
                 return true;
             }
             target = Bukkit.getPlayerExact(args[1]);
             if (target == null) {
-                Notification.error(sender, "玩家 %s 不在线", args[1]);
+                Notification.errorKey(sender, "messages.api.player_not_online", args[1]);
                 return true;
             }
         } else {
@@ -106,9 +106,9 @@ public class Vanish implements TabExecutor {
         }
 
         if (!enable && EssentialsD.vanishManager.isForced(target.getUniqueId())) {
-            Notification.error(sender, "%s 当前处于强制隐身状态，无法关闭", target.getName());
+            Notification.errorKey(sender, "messages.vanish.forced_cannot_disable", target.getName());
             if (!sender.equals(target)) {
-                Notification.warn(target, "%s 尝试关闭你的隐身状态，但你当前处于强制隐身状态", sender.getName());
+                Notification.warnKey(target, "messages.vanish.disable_attempt_blocked_target", sender.getName());
             }
             return true;
         }
@@ -117,42 +117,43 @@ public class Vanish implements TabExecutor {
         if (!changed) {
             if (EssentialsD.vanishManager.isManualVanished(target.getUniqueId()) == enable) {
                 if (enable) {
-                    Notification.warn(sender, "%s 已经处于隐身状态", sender.equals(target) ? "你" : target.getName());
+                    Notification.warnKey(sender, "messages.vanish.already_enabled", sender.equals(target) ? EssentialsD.localization.get("common.self") : target.getName());
                 } else {
-                    Notification.warn(sender, "%s 当前未处于可关闭的隐身状态", sender.equals(target) ? "你" : target.getName());
+                    Notification.warnKey(sender, "messages.vanish.already_disabled", sender.equals(target) ? EssentialsD.localization.get("common.self") : target.getName());
                 }
             } else {
-                Notification.error(sender, "隐身状态写入数据库失败，请查看后台日志");
+                Notification.errorKey(sender, "messages.vanish.persist_failed");
             }
             return true;
         }
 
         if (sender.equals(target)) {
             if (enable) {
-                Notification.info(target, EssentialsD.vanishManager.isForced(target.getUniqueId())
-                        ? "已开启隐身模式，且你当前同时受到强制隐身限制"
-                        : "已开启隐身模式");
+                Notification.infoKey(target, EssentialsD.vanishManager.isForced(target.getUniqueId())
+                        ? "messages.vanish.enabled_with_forced"
+                        : "messages.vanish.enabled");
             } else {
-                Notification.info(target, "已关闭隐身模式");
+                Notification.infoKey(target, "messages.vanish.disabled");
             }
             return true;
         }
 
-        Notification.info(sender, "已将 %s 的隐身状态设置为 %s", target.getName(), enable ? "开启" : "关闭");
-        Notification.info(target, "%s 已将你的隐身状态设置为 %s", sender.getName(), enable ? "开启" : "关闭");
+        Notification.infoKey(sender, "messages.vanish.set_other_sender", target.getName(), enable ? EssentialsD.localization.get("common.on") : EssentialsD.localization.get("common.off"));
+        Notification.infoKey(target, "messages.vanish.set_other_target", sender.getName(), enable ? EssentialsD.localization.get("common.on") : EssentialsD.localization.get("common.off"));
         return true;
     }
 
     private void sendUsage(CommandSender sender) {
-        Notification.info(sender, "用法: /vanish <list|on|off> [玩家]");
+        Notification.infoKey(sender, "messages.vanish.usage");
     }
 
     private void sendStatus(CommandSender sender, Player player) {
         boolean vanished = EssentialsD.vanishManager.isVanished(player);
         boolean forced = EssentialsD.vanishManager.isForced(player.getUniqueId());
-        Component status = Component.text("当前状态: ", NamedTextColor.GRAY)
-                .append(Component.text(vanished ? "已隐身" : "未隐身", vanished ? NamedTextColor.GREEN : NamedTextColor.RED))
-                .append(forced ? Component.text(" [强制]", NamedTextColor.GOLD) : Component.empty());
+        Component status = Component.text(EssentialsD.localization.get("ui.vanish.status_label"), NamedTextColor.GRAY)
+                .append(Component.text(vanished ? EssentialsD.localization.get("ui.vanish.status_enabled") : EssentialsD.localization.get("ui.vanish.status_disabled"),
+                        vanished ? NamedTextColor.GREEN : NamedTextColor.RED))
+                .append(forced ? Component.text(EssentialsD.localization.get("ui.vanish.status_forced_suffix"), NamedTextColor.GOLD) : Component.empty());
         Notification.info(sender, status);
     }
 
@@ -160,10 +161,10 @@ public class Vanish implements TabExecutor {
         Component line = Component.text(" - ", NamedTextColor.DARK_GRAY)
                 .append(Component.text(player.getName(), NamedTextColor.YELLOW));
         if (EssentialsD.vanishManager.isForced(player.getUniqueId())) {
-            line = line.append(Component.text(" [强制]", NamedTextColor.GOLD));
+            line = line.append(Component.text(EssentialsD.localization.get("ui.vanish.status_forced_suffix"), NamedTextColor.GOLD));
         }
         if (EssentialsD.vanishManager.canChatWhileVanished(player)) {
-            line = line.append(Component.text(" [可聊天]", NamedTextColor.AQUA));
+            line = line.append(Component.text(EssentialsD.localization.get("ui.vanish.status_chat_suffix"), NamedTextColor.AQUA));
         }
         return line;
     }

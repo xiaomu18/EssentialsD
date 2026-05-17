@@ -16,37 +16,37 @@ public class Pure implements TabExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
-            Notification.error(sender, "该命令只能由玩家执行");
+            Notification.errorKey(sender, "messages.pure.player_only");
             return true;
         }
         if (args.length != 0) {
-            Notification.info(player, "用法: /pure");
+            Notification.infoKey(player, "messages.pure.usage");
             return true;
         }
 
         boolean currentlyEnabled = EssentialsD.pureManager.isEnabled(player);
         if (!currentlyEnabled && !EssentialsD.pureManager.isFeatureEnabled()) {
-            Notification.warn(player, "服务器当前未启用 Pure 纯净模式");
+            Notification.warnKey(player, "messages.pure.feature_disabled");
             return true;
         }
 
         boolean nextState = !currentlyEnabled;
         if (!ensureKnownPlayer(player)) {
-            Notification.error(player, "纯净模式状态保存失败，请稍后重试");
+            Notification.errorKey(player, "messages.pure.save_failed");
             return true;
         }
         if (!EssentialsD.pureManager.setEnabled(player.getUniqueId(), nextState)) {
-            Notification.error(player, "纯净模式状态保存失败，请稍后重试");
+            Notification.errorKey(player, "messages.pure.save_failed");
             return true;
         }
 
         if (nextState) {
-            Notification.info(player, "已开启纯净模式，仅位于纯净列表中的玩家可与你互相看见公屏消息");
-            Notification.info(player, "使用 /purelist <add|remove|clear|list> 管理纯净列表");
+            Notification.infoKey(player, "messages.pure.enabled");
+            Notification.infoKey(player, "messages.pure.manage_hint");
             return true;
         }
 
-        Notification.info(player, "已关闭纯净模式，你将恢复看到所有玩家的公屏消息，且所有玩家也可看到你的消息");
+        Notification.infoKey(player, "messages.pure.disabled");
         return true;
     }
 

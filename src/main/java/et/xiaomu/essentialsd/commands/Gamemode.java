@@ -2,6 +2,7 @@ package et.xiaomu.essentialsd.commands;
 
 import cn.lunadeer.utils.Notification;
 import cn.lunadeer.utils.Scheduler;
+import et.xiaomu.essentialsd.EssentialsD;
 import org.bukkit.GameMode;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -18,21 +19,21 @@ public class Gamemode implements TabExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length < 1 || args.length > 2) {
-            Notification.error(sender, "Usage: /gamemode <survival|creative|adventure|spectator> [player]");
+            Notification.errorKey(sender, "messages.gamemode.usage");
             return true;
         }
 
         GameMode mode = parseMode(args[0]);
         if (mode == null) {
-            Notification.error(sender, "Unknown game mode: %s", args[0]);
+            Notification.errorKey(sender, "messages.gamemode.unknown_mode", args[0]);
             return true;
         }
         if (!sender.hasPermission("essd.gamemode." + mode.name().toLowerCase(Locale.ROOT))) {
-            Notification.error(sender, "You do not have permission to use that game mode.");
+            Notification.errorKey(sender, "messages.gamemode.no_permission_mode");
             return true;
         }
         if (args.length > 1 && !sender.hasPermission("essd.gamemode.other")) {
-            Notification.error(sender, "You do not have permission to change another player's game mode.");
+            Notification.errorKey(sender, "messages.gamemode.no_permission_other");
             return true;
         }
 
@@ -43,12 +44,12 @@ public class Gamemode implements TabExecutor {
 
         Scheduler.runTask(() -> {
             target.setGameMode(mode);
-            String modeName = mode.name().toLowerCase(Locale.ROOT);
+            String modeName = EssentialsD.localization.get("common.gamemode." + mode.name().toLowerCase(Locale.ROOT));
             if (sender.equals(target)) {
-                Notification.info(target, "Your game mode is now %s.", modeName);
+                Notification.infoKey(target, "messages.gamemode.set_self", modeName);
             } else {
-                Notification.info(sender, "%s is now in %s.", target.getName(), modeName);
-                Notification.info(target, "Your game mode is now %s.", modeName);
+                Notification.infoKey(sender, "messages.gamemode.set_other_sender", target.getName(), modeName);
+                Notification.infoKey(target, "messages.gamemode.set_self", modeName);
             }
         });
         return true;

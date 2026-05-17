@@ -24,13 +24,13 @@ public class CreativeTakeListener implements Listener {
 
         if (EssentialsD.config.forbidTakeItems.contains(clickedItem.getType())) {
             event.setCancelled(true);
-            Notification.warn(event.getWhoClicked(), "你尝试拿取非法的物品, 已移除");
+            Notification.warnKey(event.getWhoClicked(), "messages.creative_take.blocked");
             return;
         }
 
         if (EssentialsD.config.forbidNBTItem && clickedItem.hasItemMeta()) {
             event.setCancelled(true);
-            Notification.warn(event.getWhoClicked(), "你尝试拿取非法的物品, 已移除");
+            Notification.warnKey(event.getWhoClicked(), "messages.creative_take.blocked");
             return;
         }
     }

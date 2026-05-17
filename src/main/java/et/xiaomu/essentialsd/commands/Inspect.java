@@ -21,11 +21,11 @@ public class Inspect implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player viewer)) {
-            Notification.error(sender, "只有玩家才能使用这个命令");
+            Notification.errorKey(sender, "messages.common.player_only_command");
             return true;
         }
         if (args.length == 0) {
-            Notification.error(sender, "用法: /inspect <玩家> [--ender]");
+            Notification.errorKey(sender, "messages.inspect.usage");
             return true;
         }
 
@@ -40,15 +40,15 @@ public class Inspect implements CommandExecutor {
                 targetArg = arg;
                 continue;
             }
-            Notification.error(sender, "用法: /inspect <玩家> [--ender]");
+            Notification.errorKey(sender, "messages.inspect.usage");
             return true;
         }
         if (targetArg == null || targetArg.isBlank()) {
-            Notification.error(sender, "用法: /inspect <玩家> [--ender]");
+            Notification.errorKey(sender, "messages.inspect.usage");
             return true;
         }
         if (!viewer.hasPermission(PERMISSION_INSPECT)) {
-            Notification.error(viewer, "你没有权限使用该命令");
+            Notification.errorKey(viewer, "messages.inspect.no_permission");
             return true;
         }
 
@@ -57,7 +57,7 @@ public class Inspect implements CommandExecutor {
         if (target.isOnline()) {
             writable = viewer.hasPermission(PERMISSION_INSPECT_WRITE);
         } else if (!viewer.hasPermission(PERMISSION_INSPECT_OFFLINE)) {
-            Notification.error(viewer, "你没有权限查看离线玩家的背包");
+            Notification.errorKey(viewer, "messages.inspect.no_permission_offline");
             return true;
         }
 

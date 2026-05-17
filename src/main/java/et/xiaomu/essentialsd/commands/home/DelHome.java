@@ -16,7 +16,7 @@ import java.util.List;
 public class DelHome implements TabExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player)) {
-            Notification.warn(sender, "只有玩家可以使用此命令");
+            Notification.warnKey(sender, "messages.common.player_only_command");
             return true;
         } else {
             Player player = (Player) sender;
@@ -29,9 +29,9 @@ public class DelHome implements TabExecutor {
 
             boolean res = HomeInfo.deleteHome(player.getUniqueId(), homeName);
             if (res) {
-                Notification.info(player, "成功删除家 %s", homeName);
+                Notification.infoKey(player, "messages.delhome.deleted", homeName);
             } else {
-                Notification.error(player, "删除家 %s 失败, 请联系管理员", homeName);
+                Notification.errorKey(player, "messages.delhome.delete_failed", homeName);
             }
 
             if (args.length == 2) {

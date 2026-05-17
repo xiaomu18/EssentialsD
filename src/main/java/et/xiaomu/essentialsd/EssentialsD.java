@@ -21,6 +21,7 @@ import et.xiaomu.essentialsd.managers.TeleportManager;
 import et.xiaomu.essentialsd.managers.VanishManager;
 import et.xiaomu.essentialsd.hooks.EssentialsDPlaceholderExpansion;
 import et.xiaomu.essentialsd.recipes.*;
+import et.xiaomu.essentialsd.services.LocalizationService;
 import cn.lunadeer.utils.DatabaseManager;
 import cn.lunadeer.utils.Notification;
 import cn.lunadeer.utils.Scheduler;
@@ -49,6 +50,7 @@ public final class EssentialsD extends JavaPlugin {
     public static PureManager pureManager;
     public static InspectManager inspectManager;
     public static VanishManager vanishManager;
+    public static LocalizationService localization;
     private EssentialsDPlaceholderExpansion placeholderExpansion;
     public static Map<String, CommandExecutor> commands = new HashMap<>();
 
@@ -62,6 +64,7 @@ public final class EssentialsD extends JavaPlugin {
         new XLogger(instance);
         loadBuildInfo();
         config = new ConfigManager(instance);
+        localization = new LocalizationService(instance);
         new Notification(instance);
         database = new DatabaseManager(this, DatabaseManager.TYPE.valueOf(config.getDbType().toUpperCase()), config.getDbHost(), config.getDbPort(), config.getDbName(), config.getDbUser(), config.getDbPass());
         DatabaseTables.migrate();
@@ -206,6 +209,7 @@ public final class EssentialsD extends JavaPlugin {
         vanishManager = null;
         muteManager = null;
         pureManager = null;
+        localization = null;
         database = null;
         config = null;
         instance = null;

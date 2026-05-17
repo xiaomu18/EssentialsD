@@ -2,6 +2,7 @@ package et.xiaomu.essentialsd.commands;
 
 import cn.lunadeer.utils.Notification;
 import cn.lunadeer.utils.Scheduler;
+import et.xiaomu.essentialsd.EssentialsD;
 import et.xiaomu.essentialsd.managers.inspect.OfflinePlayerDataAccess;
 import et.xiaomu.essentialsd.utils.MuteDuration;
 import et.xiaomu.essentialsd.utils.PlayerLookup;
@@ -37,24 +38,24 @@ public class Info implements TabExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!sender.hasPermission("essd.info")) {
-            Notification.error(sender, "你没有权限使用这个命令");
+            Notification.errorKey(sender, "messages.info.no_permission");
             return true;
         }
         if (args.length != 1) {
-            Notification.error(sender, "用法: /info <player>");
+            Notification.errorKey(sender, "messages.info.usage");
             return true;
         }
 
         OfflinePlayer target = PlayerLookup.resolve(args[0]);
         if (target == null) {
-            Notification.error(sender, "找不到玩家: %s", args[0]);
+            Notification.errorKey(sender, "messages.info.player_not_found", args[0]);
             return true;
         }
 
         if (target.isOnline()) {
             Player online = target.getPlayer();
             if (online == null) {
-                Notification.error(sender, "无法读取玩家 %s 的在线数据", args[0]);
+                Notification.errorKey(sender, "messages.info.read_online_failed", args[0]);
                 return true;
             }
             Scheduler.runEntityTask(online, () -> dispatchToSender(sender, () -> sendInfo(sender, fromOnline(online))));
@@ -65,7 +66,7 @@ public class Info implements TabExecutor {
             OfflinePlayerDataAccess.PlayerDataSnapshot snapshot = OfflinePlayerDataAccess.loadSnapshot(target);
             dispatchToSender(sender, () -> {
                 if (snapshot == null) {
-                    Notification.error(sender, "无法读取玩家 %s 的离线数据", PlayerLookup.displayName(target));
+                    Notification.errorKey(sender, "messages.info.read_offline_failed", PlayerLookup.displayName(target));
                     return;
                 }
                 sendInfo(sender, fromOffline(target, snapshot));
@@ -137,34 +138,36 @@ public class Info implements TabExecutor {
 
     private void sendInfo(CommandSender sender, PlayerInfo info) {
         TextColor statusColor = info.online() ? NORMAL : SEVERE;
-        String statusText = info.online() ? "在线" : "离线";
+        String statusText = info.online() ? EssentialsD.localization.get("common.online") : EssentialsD.localization.get("common.offline");
 
-        sender.sendMessage(Component.text("┏━━ 玩家信息 ━━ ", PRIMARY)
+        sender.sendMessage(Component.text(EssentialsD.localization.get("ui.info.header"), PRIMARY)
                 .append(Component.text(info.displayName(), ACTION))
                 .append(Component.text(" [" + statusText + "]", statusColor)));
         sender.sendMessage(joinPairs(
-                pair("UUID", Component.text(info.uuid().toString(), SECONDARY)
+                pair(EssentialsD.localization.get("ui.info.uuid_label"), Component.text(info.uuid().toString(), SECONDARY)
                         .clickEvent(net.kyori.adventure.text.event.ClickEvent.copyToClipboard(info.uuid().toString()))
-                        .hoverEvent(Component.text("点击复制 UUID", ACTION))),
+                        .hoverEvent(Component.text(EssentialsD.localization.get("ui.info.copy_uuid_hover"), ACTION))),
                 Component.text(prettyGameMode(info.gameMode()), ACTION)
         ));
         sender.sendMessage(joinPairs(
-                pair("坐标", String.format(Locale.US, "%s (%.2f, %.2f, %.2f)", info.worldName(), info.x(), info.y(), info.z()), NORMAL),
-                pair("Invulnerable", info.invulnerable() ? "是" : "否", info.invulnerable() ? NORMAL : SEVERE)
+                pair(EssentialsD.localization.get("ui.info.location_label"), String.format(Locale.US, "%s (%.2f, %.2f, %.2f)", info.worldName(), info.x(), info.y(), info.z()), NORMAL),
+                pair(EssentialsD.localization.get("ui.info.invulnerable_label"), info.invulnerable() ? EssentialsD.localization.get("common.yes") : EssentialsD.localization.get("common.no"), info.invulnerable() ? NORMAL : SEVERE)
         ));
         sender.sendMessage(joinTriple(
-                pair("AllowFlight", info.allowFlight() ? "是" : "否", info.allowFlight() ? NORMAL : SEVERE),
-                pair("飞行速度", String.format(Locale.US, "%.3f", info.flySpeed()), ACTION),
-                pair("移动速度", String.format(Locale.US, "%.3f", info.walkSpeed()), ACTION)
+                pair(EssentialsD.localization.get("ui.info.allow_flight_label"), info.allowFlight() ? EssentialsD.localization.get("common.yes") : EssentialsD.localization.get("common.no"), info.allowFlight() ? NORMAL : SEVERE),
+                pair(EssentialsD.localization.get("ui.info.fly_speed_label"), String.format(Locale.US, "%.3f", info.flySpeed()), ACTION),
+                pair(EssentialsD.localization.get("ui.info.walk_speed_label"), String.format(Locale.US, "%.3f", info.walkSpeed()), ACTION)
         ));
         sender.sendMessage(joinSingle(
-                pair(info.online() ? "上线时间" : "上次在线", formatTimestamp(info.online() ? info.loginAtMillis() : resolveLastOnlineMillis(info)), NORMAL)
+                pair(info.online() ? EssentialsD.localization.get("ui.info.login_time_label") : EssentialsD.localization.get("ui.info.last_seen_label"),
+                        formatTimestamp(info.online() ? info.loginAtMillis() : resolveLastOnlineMillis(info)), NORMAL)
         ));
         sender.sendMessage(joinPairs(
-                pair(info.online() ? "已在线多久" : "已离线多久", formatDuration(info.online() ? info.onlineDurationMillis() : info.offlineDurationMillis()), ACTION),
-                pair("总游玩时长", formatDuration(info.totalPlayTimeMillis()), NORMAL)
+                pair(info.online() ? EssentialsD.localization.get("ui.info.online_duration_label") : EssentialsD.localization.get("ui.info.offline_duration_label"),
+                        formatDuration(info.online() ? info.onlineDurationMillis() : info.offlineDurationMillis()), ACTION),
+                pair(EssentialsD.localization.get("ui.info.total_play_time_label"), formatDuration(info.totalPlayTimeMillis()), NORMAL)
         ));
-        sender.sendMessage(Component.text("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━", PRIMARY));
+        sender.sendMessage(Component.text(EssentialsD.localization.get("ui.info.footer"), PRIMARY));
     }
 
     private @Nullable Long resolveLastOnlineMillis(PlayerInfo info) {
@@ -224,23 +227,23 @@ public class Info implements TabExecutor {
 
     private String prettyGameMode(String mode) {
         return switch (mode.toUpperCase(Locale.ROOT)) {
-            case "CREATIVE" -> "创造";
-            case "ADVENTURE" -> "冒险";
-            case "SPECTATOR" -> "旁观";
-            default -> "生存";
+            case "CREATIVE" -> EssentialsD.localization.get("common.gamemode.creative");
+            case "ADVENTURE" -> EssentialsD.localization.get("common.gamemode.adventure");
+            case "SPECTATOR" -> EssentialsD.localization.get("common.gamemode.spectator");
+            default -> EssentialsD.localization.get("common.gamemode.survival");
         };
     }
 
     private String formatTimestamp(@Nullable Long millis) {
         if (millis == null || millis <= 0L) {
-            return "未知";
+            return EssentialsD.localization.get("common.unknown");
         }
         return TIME_FORMATTER.format(Instant.ofEpochMilli(millis));
     }
 
     private String formatDuration(@Nullable Long millis) {
         if (millis == null) {
-            return "未知";
+            return EssentialsD.localization.get("common.unknown");
         }
         return MuteDuration.formatDuration(Math.max(0L, millis));
     }

@@ -16,17 +16,17 @@ import java.util.List;
 public class SetHome implements TabExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player)) {
-            Notification.warn(sender, "只有玩家可以使用此命令");
+            Notification.warnKey(sender, "messages.common.player_only_command");
             return true;
         } else {
             Player player = (Player) sender;
             if (EssentialsD.config.getHomeWorldBlacklist().contains(player.getWorld().getName())) {
-                Notification.error(player, "当前世界 %s 不允许设置家", player.getWorld().getName());
+                Notification.errorKey(player, "messages.sethome.world_blocked", player.getWorld().getName());
                 return true;
             }
             List<HomeInfo> homes = HomeInfo.getHomesOf(((Player) sender).getUniqueId());
             if (homes.size() > EssentialsD.config.getHomeLimitAmount()) {
-                Notification.error(player, "你的家数量已达上限");
+                Notification.errorKey(player, "messages.sethome.limit_reached");
                 return true;
             } else {
                 HomeInfo info = new HomeInfo();
@@ -40,14 +40,14 @@ public class SetHome implements TabExecutor {
                 info.location = player.getLocation();
                 HomeInfo exist = HomeInfo.getHome(player.getUniqueId(), info.homeName);
                 if (exist != null) {
-                    Notification.error(player, "已经存在名为 %s 的家", info.homeName);
+                    Notification.errorKey(player, "messages.sethome.already_exists", info.homeName);
                     return true;
                 } else {
                     boolean res = HomeInfo.newHome(info);
                     if (res) {
-                        Notification.info(player, "成功设置家 %s", info.homeName);
+                        Notification.infoKey(player, "messages.sethome.created", info.homeName);
                     } else {
-                        Notification.error(player, "设置家 %s 失败, 请联系管理员", info.homeName);
+                        Notification.errorKey(player, "messages.sethome.create_failed", info.homeName);
                     }
 
                     return true;
@@ -57,6 +57,6 @@ public class SetHome implements TabExecutor {
     }
 
     public @Nullable List onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        return args.length == 1 ? Collections.singletonList("[home名称]") : null;
+        return args.length == 1 ? Collections.singletonList("home-name") : null;
     }
 }

@@ -11,7 +11,7 @@ public class Heal implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player) && args.length == 0) {
-            Notification.warn(sender, "必须指定一个玩家: /heal <玩家名>");
+            Notification.warnKey(sender, "messages.heal.console_requires_player");
             return true;
         }
 
@@ -19,7 +19,7 @@ public class Heal implements CommandExecutor {
         if (args.length > 0) {
             target = Bukkit.getPlayer(args[0]);
             if (target == null) {
-                Notification.warn(sender, "玩家 %s 未找到或不在线!", args[0]);
+                Notification.warnKey(sender, "messages.heal.player_not_found", args[0]);
                 return true;
             }
         } else {
@@ -28,10 +28,10 @@ public class Heal implements CommandExecutor {
 
         healPlayer(target);
         if (sender.equals(target)) {
-            Notification.info(sender, "你已恢复全部生命值和饱食度!");
+            Notification.infoKey(sender, "messages.heal.healed_self");
         } else {
-            Notification.info(sender, "已恢复玩家 %s 的生命值和饱食度!", target.getName());
-            Notification.info(target, "你的生命值和饱食度已被管理员恢复!");
+            Notification.infoKey(sender, "messages.heal.healed_other_sender", target.getName());
+            Notification.infoKey(target, "messages.heal.healed_other_target");
         }
         return true;
     }

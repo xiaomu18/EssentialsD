@@ -14,7 +14,7 @@ import java.util.List;
 public class Back implements TabExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player)) {
-            Notification.warn(sender, "只有玩家可以使用此命令");
+            Notification.warnKey(sender, "messages.common.player_only_command");
             return true;
         } else {
             Player player = (Player) sender;

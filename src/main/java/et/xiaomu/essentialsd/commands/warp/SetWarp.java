@@ -18,14 +18,14 @@ import java.util.List;
 public class SetWarp implements TabExecutor {
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
         if (strings.length != 1 && strings.length != 5) {
-            Notification.error(commandSender, "用法: /setwarp <name> 或 /setwarp <name> <world> <x> <y> <z>");
+            Notification.errorKey(commandSender, "messages.setwarp.usage");
             return true;
         } else {
             String name = strings[0];
             Location location;
             if (strings.length == 1) {
                 if (!(commandSender instanceof Player)) {
-                    Notification.error(commandSender, "请指定坐标 /setwarp <name> <world> <x> <y> <z>");
+                    Notification.errorKey(commandSender, "messages.setwarp.console_requires_coordinates");
                     return true;
                 }
 
@@ -34,7 +34,7 @@ public class SetWarp implements TabExecutor {
                 try {
                     World world = EssentialsD.instance.getServer().getWorld(strings[1]);
                     if (world == null) {
-                        Notification.error(commandSender, "世界 %s 不存在", strings[1]);
+                        Notification.errorKey(commandSender, "messages.setwarp.world_not_found", strings[1]);
                         return true;
                     }
 
@@ -43,19 +43,19 @@ public class SetWarp implements TabExecutor {
                     double z = Double.parseDouble(strings[4]);
                     location = new Location(world, x, y, z);
                 } catch (NumberFormatException var14) {
-                    Notification.error(commandSender, "坐标必须是数字");
+                    Notification.errorKey(commandSender, "messages.setwarp.coordinates_must_be_numbers");
                     return true;
                 }
             }
 
             WarpPoint existing = WarpPoint.selectByName(name);
             if (existing != null) {
-                Notification.error(commandSender, "传送点 %s 已存在", name);
+                Notification.errorKey(commandSender, "messages.setwarp.already_exists", name);
                 return true;
             } else {
                 WarpPoint point = new WarpPoint(name, location);
                 WarpPoint.insert(point);
-                Notification.info(commandSender, "传送点 %s 已设置", name);
+                Notification.infoKey(commandSender, "messages.setwarp.created", name);
                 return true;
             }
         }
@@ -64,11 +64,11 @@ public class SetWarp implements TabExecutor {
     public @Nullable List onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         List<String> res = new ArrayList();
         if (args.length == 1) {
-            res.add("传送点名称");
+            res.add("warp-name");
         }
 
         if (args.length == 2) {
-            res.add("世界名称");
+            res.add("world-name");
         }
 
         if (args.length == 3) {

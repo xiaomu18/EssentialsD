@@ -39,13 +39,13 @@ public class CommandPreprocessEvent implements Listener {
 
         if (shouldBlockPrivateMessage(player, message)) {
             event.setCancelled(true);
-            player.sendMessage(Component.translatable("argument.entity.notfound.player").color(NamedTextColor.RED));
+            player.sendMessage(Component.text(EssentialsD.localization.get("messages.command.private_message_blocked")).color(NamedTextColor.RED));
             return;
         }
 
         if (EssentialsD.muteManager.getMute(player) != null && EssentialsD.muteManager.isBlockedCommand(message)) {
             event.setCancelled(true);
-            Notification.warn(player, EssentialsD.config.MUTE_BLOCKED_COMMAND_MESSAGE);
+            Notification.warnKey(player, "messages.mute.blocked_command");
             return;
         }
 
@@ -70,7 +70,7 @@ public class CommandPreprocessEvent implements Listener {
                 if (currentTime - lastTime < EssentialsD.config.CMD_COOLDOWN_MS) {
                     lastCommandTime.put(player.getUniqueId(), currentTime);
                     event.setCancelled(true);
-                    player.sendMessage(EssentialsD.config.CMD_CD_MESSAGE);
+                    Notification.warnKey(player, "messages.command.cooldown");
                     return;
                 }
             }

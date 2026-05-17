@@ -37,7 +37,7 @@ public class CrowEvent implements Listener {
                             if (blockData instanceof Rail) {
                                 Rail rail = (Rail) blockData;
                                 if (!Crowbar.changeable(rail.getShape())) {
-                                    Notification.warn(player, "无法使用撬棍修改此铁轨的方向");
+                                    Notification.warnKey(player, "messages.crowbar.invalid_rail");
                                 } else {
                                     rail.setShape(Crowbar.changeToNext(rail.getShape()));
                                     block.setBlockData(rail);

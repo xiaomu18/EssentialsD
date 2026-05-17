@@ -1,4 +1,5 @@
 package cn.lunadeer.utils;
+import et.xiaomu.essentialsd.EssentialsD;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.Style;
@@ -20,15 +21,15 @@ public class Notification {
     public Notification(JavaPlugin plugin) {
         instance = this;
         this.plugin = plugin;
-        this.prefix = plugin.getConfig().getString("prefix");
+        this.prefix = EssentialsD.localization.get("common.prefix");
         this.sender = new SendMessageAbstract(plugin);
     }
 
-    public static void reloadPrefix(JavaPlugin plugin) {
+    public static void reloadPrefix() {
         if (instance == null) {
             return;
         }
-        instance.setPrefix(plugin.getConfig().getString("prefix", "[EssentialsD]"));
+        instance.setPrefix(EssentialsD.localization.get("common.prefix"));
     }
 
     public void setPrefix(String prefix) {
@@ -43,12 +44,20 @@ public class Notification {
         instance.sender.sendMessage((Player) player, Component.text(instance.prefix + " " + String.format(msg, args), i_style));
     }
 
+    public static void infoKey(Player player, String key, Object... args) {
+        info(player, EssentialsD.localization.format(key, args));
+    }
+
     public static void warn(Player player, String msg) {
         instance.sender.sendMessage((Player) player, Component.text(instance.prefix + " " + msg, w_style));
     }
 
     public static void warn(Player player, String msg, Object... args) {
         instance.sender.sendMessage((Player) player, Component.text(instance.prefix + " " + String.format(msg, args), w_style));
+    }
+
+    public static void warnKey(Player player, String key, Object... args) {
+        warn(player, EssentialsD.localization.format(key, args));
     }
 
     public static void error(Player player, String msg) {
@@ -59,12 +68,20 @@ public class Notification {
         instance.sender.sendMessage((Player) player, Component.text(instance.prefix + " " + String.format(msg, args), e_style));
     }
 
+    public static void errorKey(Player player, String key, Object... args) {
+        error(player, EssentialsD.localization.format(key, args));
+    }
+
     public static void info(CommandSender sender, String msg) {
         instance.sender.sendMessage((CommandSender) sender, Component.text(instance.prefix + " " + msg, i_style));
     }
 
     public static void info(CommandSender sender, String msg, Object... args) {
         instance.sender.sendMessage((CommandSender) sender, Component.text(instance.prefix + " " + String.format(msg, args), i_style));
+    }
+
+    public static void infoKey(CommandSender sender, String key, Object... args) {
+        info(sender, EssentialsD.localization.format(key, args));
     }
 
     public static void warn(CommandSender sender, String msg) {
@@ -75,12 +92,20 @@ public class Notification {
         instance.sender.sendMessage((CommandSender) sender, Component.text(instance.prefix + " " + String.format(msg, args), w_style));
     }
 
+    public static void warnKey(CommandSender sender, String key, Object... args) {
+        warn(sender, EssentialsD.localization.format(key, args));
+    }
+
     public static void error(CommandSender sender, String msg) {
         instance.sender.sendMessage((CommandSender) sender, Component.text(instance.prefix + " " + msg, e_style));
     }
 
     public static void error(CommandSender sender, String msg, Object... args) {
         instance.sender.sendMessage((CommandSender) sender, Component.text(instance.prefix + " " + String.format(msg, args), e_style));
+    }
+
+    public static void errorKey(CommandSender sender, String key, Object... args) {
+        error(sender, EssentialsD.localization.format(key, args));
     }
 
     public static void info(Player player, Component msg) {
@@ -119,12 +144,20 @@ public class Notification {
         instance.sender.broadcast(Component.text(instance.prefix + " " + String.format(msg, args), i_style));
     }
 
+    public static void allKey(String key, Object... args) {
+        all(EssentialsD.localization.format(key, args));
+    }
+
     public static void actionBar(Player player, String msg) {
         instance.sender.sendActionBar(player, Component.text(msg));
     }
 
     public static void actionBar(Player player, String msg, Object... args) {
         instance.sender.sendActionBar(player, Component.text(String.format(msg, args)));
+    }
+
+    public static void actionBarKey(Player player, String key, Object... args) {
+        actionBar(player, EssentialsD.localization.format(key, args));
     }
 
     public static void actionBar(Player player, Component msg) {

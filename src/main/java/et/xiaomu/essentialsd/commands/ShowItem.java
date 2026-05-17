@@ -29,7 +29,7 @@ public class ShowItem implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
-            Notification.warn(sender, "只有玩家可以使用此命令");
+            Notification.warnKey(sender, "messages.common.player_only_command");
             return true;
         }
         if (args.length == 1) {
@@ -40,7 +40,7 @@ public class ShowItem implements CommandExecutor {
         PlayerInventory backpack = player.getInventory();
         ItemStack item = backpack.getItemInMainHand().clone();
         if (item.getType().isAir()) {
-            Notification.warn(player, "你的主手为空");
+            Notification.warnKey(player, "messages.show_item.empty_hand");
             return true;
         }
 
@@ -50,23 +50,23 @@ public class ShowItem implements CommandExecutor {
         }
 
         UUID uuid = UUID.randomUUID();
-        Button show = new CommandButton(name, "/showitem " + uuid).setHoverText("点击查看物品信息");
-        TextComponent title = Component.text("物品展示").hoverEvent(Component.text(uuid.toString())).color(SHOW_COLOR);
+        Button show = new CommandButton(name, "/showitem " + uuid).setHoverText(EssentialsD.localization.get("ui.show_item.hover"));
+        TextComponent title = Component.text(EssentialsD.localization.get("ui.show_item.title")).hoverEvent(Component.text(uuid.toString())).color(SHOW_COLOR);
         Inventory inv = EssentialsD.instance.getServer().createInventory((InventoryHolder) null, 54, title);
         inv.setItem(22, item);
         cache.put(uuid.toString(), new ShowItemEntry(player.getUniqueId(), inv));
-        broadcastFiltered(player, Component.text("玩家 " + player.getName() + " 展示了物品 ").append(show.build()));
+        broadcastFiltered(player, Component.text(EssentialsD.localization.format("messages.show_item.broadcast", player.getName())).append(show.build()));
         return true;
     }
 
     private static void openView(Player player, String name) {
         ShowItemEntry entry = cache.get(name);
         if (entry == null) {
-            Notification.warn(player, "物品不存在");
+            Notification.warnKey(player, "messages.show_item.not_found");
             return;
         }
         if (!EssentialsD.pureManager.canMutuallySee(entry.ownerId(), player.getUniqueId())) {
-            Notification.warn(player, "你无法查看该物品");
+            Notification.warnKey(player, "messages.show_item.not_visible");
             return;
         }
         player.openInventory(entry.inventory());

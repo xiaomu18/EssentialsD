@@ -1,5 +1,5 @@
-#插件前缀
-prefix: "[EssentialsD]"
+# 语言设置
+Locale: zh_CN
 
 Debug: false
 
@@ -75,13 +75,10 @@ chat:
   allow-minimessage-perm: "essd.chat.allow-use-minimessage"
   cooldown: 2000 # 毫秒 (1s=1000ms)
   max-length: 256
-  too-long-message: "消息内容过长，无法发送"
   intercepting-identical-content: false
-  intercept-identical-content-message: "请不要重复发送相同消息"
   forbid-keywords:
     - "傻逼"
     - "fuck"
-  forbid-message: "请不要说脏话"
   replace-words:
     - ["abc1", "abc"]
   # 掩耳盗铃模式: 开启后若被拦截消息仍可以发送，但消息不会被广播，而是仅自己可见
@@ -99,14 +96,11 @@ chat:
       - "tell"
       - "w"
       - "me"
-    block-message: "你已被禁言"
-    blocked-command-message: "你已被禁言，暂时无法使用此命令"
 
 command-manager:
   Enable: false
   # 拥有 essd.bypass.CommandCD 权限可以绕过此限制
   cooldown: 1000 # 毫秒 (1s=1000ms)
-  cd_message: "你使用命令太快，请稍后重试"
   # 禁止所有玩家执行的一级命令，仅控制台可执行
   # 这里只填主命令名，不要带 /
   banned_command:

@@ -1,6 +1,7 @@
 package et.xiaomu.essentialsd.tuis;
 
 import et.xiaomu.essentialsd.dtos.WarpPoint;
+import et.xiaomu.essentialsd.EssentialsD;
 import et.xiaomu.essentialsd.utils.LocUtil;
 import cn.lunadeer.utils.Notification;
 import cn.lunadeer.utils.stui.ListView;
@@ -26,12 +27,12 @@ public class WarpList {
 
     public static void show(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
-            Notification.warn(sender, "只有玩家可以使用此命令");
+            Notification.warnKey(sender, "messages.common.player_only_command");
         } else {
             Player player = (Player) sender;
             List<WarpPoint> points = WarpPoint.selectAll();
             if (points.isEmpty()) {
-                Notification.warn(player, "没有传送点");
+                Notification.warnKey(player, "messages.warp_list.empty");
             } else {
                 int page = 1;
                 if (args.length == 1) {
@@ -42,10 +43,10 @@ public class WarpList {
                 }
 
                 ListView view = ListView.create(5, button());
-                view.title("Warp 列表");
+                view.title(EssentialsD.localization.get("ui.warp_list.title"));
 
                 for (WarpPoint point : points) {
-                    Line line = Line.create().append((TextComponent) Component.text(point.getName()).hoverEvent(Component.text(LocUtil.toString(point.getLocation())))).append(new CommandButton("传送", "/warp " + point.getName()).build());
+                    Line line = Line.create().append((TextComponent) Component.text(point.getName()).hoverEvent(Component.text(LocUtil.toString(point.getLocation())))).append(new CommandButton(EssentialsD.localization.get("ui.common.teleport_button"), "/warp " + point.getName()).build());
                     view.add(line);
                 }
 

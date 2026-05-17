@@ -12,12 +12,12 @@ public class TpaCancel implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
-            Notification.warn(sender, "只有玩家可以使用此命令");
+            Notification.warnKey(sender, "messages.common.player_only_command");
             return true;
         }
 
         if (args.length != 0) {
-            Notification.error(player, "参数错误");
+            Notification.errorKey(player, "messages.tpa_cancel.invalid_args");
             return false;
         }
 

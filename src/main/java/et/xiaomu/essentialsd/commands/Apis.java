@@ -16,13 +16,13 @@ public class Apis {
             if (sender instanceof Player) {
                 return (Player) sender;
             } else {
-                Notification.error(sender, "以控制台身份执行时，必须指定玩家");
+                Notification.errorKey(sender, "messages.api.console_requires_player");
                 return null;
             }
         } else {
             Player target = EssentialsD.instance.getServer().getPlayer(args[pos]);
             if (target == null) {
-                Notification.warn(sender, "玩家 %s 不在线", args[0]);
+                Notification.warnKey(sender, "messages.api.player_not_online", args[0]);
                 return null;
             } else {
                 return target;
@@ -38,7 +38,7 @@ public class Apis {
         Scheduler.runTask(() -> EssentialsD.instance.getServer().getWorlds().forEach((world) -> {
             if (world.getEnvironment() == Environment.NORMAL) {
                 world.setTime(time);
-                Notification.info(sender, "设置 %s 时间为 %d", world.getName(), time);
+                Notification.infoKey(sender, "messages.api.world_time_set", world.getName(), time);
             }
 
         }));

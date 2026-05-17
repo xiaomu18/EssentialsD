@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 public class God implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player) && args.length < 1) {
-            Notification.error(sender, "以控制台身份执行时，必须指定玩家：/god <player>");
+            Notification.errorKey(sender, "messages.god.console_requires_player");
             return false;
         } else {
             Player target = Apis.getPlayerFromArg(sender, args, 0);
@@ -20,24 +20,24 @@ public class God implements CommandExecutor {
             }
             Scheduler.runEntityTask(target, () -> {
                 if (!target.isOnline()) {
-                    Notification.error(sender, "玩家 %s 不在线", target.getName());
+                    Notification.errorKey(sender, "messages.api.player_not_online", target.getName());
                     return;
                 }
                 if (target.isInvulnerable()) {
                     if (et.xiaomu.essentialsd.EssentialsD.vanishManager.isVanished(target)) {
-                        Notification.error(sender, "玩家 %s 当前处于隐身状态，无法关闭无敌模式", target.getName());
+                        Notification.errorKey(sender, "messages.god.disable_blocked_by_vanish_sender", target.getName());
                         if (!sender.equals(target)) {
-                            Notification.warn(target, "%s 尝试关闭你的无敌模式，但你当前处于隐身状态", sender.getName());
+                            Notification.warnKey(target, "messages.god.disable_blocked_by_vanish_target", sender.getName());
                         }
                         return;
                     }
                     target.setInvulnerable(false);
-                    Notification.info(sender, "已关闭玩家 %s 的无敌模式", target.getName());
-                    Notification.info(target, "已关闭无敌模式");
+                    Notification.infoKey(sender, "messages.god.disabled_other", target.getName());
+                    Notification.infoKey(target, "messages.god.disabled_self");
                 } else {
                     target.setInvulnerable(true);
-                    Notification.info(sender, "已开启玩家 %s 的无敌模式", target.getName());
-                    Notification.info(target, "已开启无敌模式");
+                    Notification.infoKey(sender, "messages.god.enabled_other", target.getName());
+                    Notification.infoKey(target, "messages.god.enabled_self");
                 }
             });
             return true;

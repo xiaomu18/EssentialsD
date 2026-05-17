@@ -10,10 +10,10 @@ import org.jetbrains.annotations.NotNull;
 
 public class Save implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        Notification.info(sender, "正在保存服务器存档...");
+        Notification.infoKey(sender, "messages.save.start");
         EssentialsD.instance.getServer().savePlayers();
         EssentialsD.instance.getServer().getWorlds().forEach(World::save);
-        Notification.info(sender, "服务器存档已保存");
+        Notification.infoKey(sender, "messages.save.done");
         return true;
     }
 }

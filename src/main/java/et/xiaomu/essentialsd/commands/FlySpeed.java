@@ -2,6 +2,7 @@ package et.xiaomu.essentialsd.commands;
 
 import cn.lunadeer.utils.Notification;
 import cn.lunadeer.utils.Scheduler;
+import et.xiaomu.essentialsd.EssentialsD;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -21,21 +22,21 @@ public class FlySpeed implements TabExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length < 1 || args.length > 2) {
-            Notification.error(sender, "用法: /flyspeed <reset|速度倍率> [玩家]");
+            Notification.errorKey(sender, "messages.flyspeed.usage");
             return true;
         }
         if (!(sender instanceof Player) && args.length < 2) {
-            Notification.error(sender, "控制台必须指定目标玩家");
+            Notification.errorKey(sender, "messages.flyspeed.console_requires_player");
             return true;
         }
         if (args.length == 2 && !sender.hasPermission("essd.flyspeed.other")) {
-            Notification.error(sender, "你没有权限修改其他玩家的飞行速度");
+            Notification.errorKey(sender, "messages.flyspeed.no_permission_other");
             return true;
         }
 
         Float flySpeed = parseFlySpeed(args[0]);
         if (flySpeed == null) {
-            Notification.error(sender, "参数错误，速度倍率必须是 reset 或 0.0 到 10.0 之间的小数");
+            Notification.errorKey(sender, "messages.flyspeed.invalid_value");
             return true;
         }
 
@@ -44,15 +45,15 @@ public class FlySpeed implements TabExecutor {
             return true;
         }
 
-        String displayValue = "reset".equalsIgnoreCase(args[0]) ? "默认值" : args[0];
+        String displayValue = "reset".equalsIgnoreCase(args[0]) ? EssentialsD.localization.get("common.default_value") : args[0];
         Scheduler.runEntityTask(target, () -> {
             target.setFlySpeed(flySpeed);
             if (sender.equals(target)) {
-                Notification.info(target, "已将飞行速度设置为 %s", displayValue);
+                Notification.infoKey(target, "messages.flyspeed.set_self", displayValue);
                 return;
             }
-            Notification.info(sender, "已将 %s 的飞行速度设置为 %s", target.getName(), displayValue);
-            Notification.info(target, "%s 将你的飞行速度设置为 %s", sender.getName(), displayValue);
+            Notification.infoKey(sender, "messages.flyspeed.set_other_sender", target.getName(), displayValue);
+            Notification.infoKey(target, "messages.flyspeed.set_other_target", sender.getName(), displayValue);
         });
         return true;
     }

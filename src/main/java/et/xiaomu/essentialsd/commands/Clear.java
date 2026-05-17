@@ -2,6 +2,7 @@ package et.xiaomu.essentialsd.commands;
 
 import cn.lunadeer.utils.Notification;
 import cn.lunadeer.utils.Scheduler;
+import et.xiaomu.essentialsd.EssentialsD;
 import et.xiaomu.essentialsd.managers.inspect.InspectManager;
 import et.xiaomu.essentialsd.managers.inspect.OfflinePlayerDataAccess;
 import et.xiaomu.essentialsd.utils.PlayerLookup;
@@ -31,38 +32,38 @@ public class Clear implements TabExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!sender.hasPermission(PERMISSION_CLEAR)) {
-            Notification.error(sender, "你没有权限使用这个命令");
+            Notification.errorKey(sender, "messages.clear.no_permission");
             return true;
         }
 
         ParsedArgs parsed = ParsedArgs.parse(args);
         if (parsed == null) {
-            Notification.error(sender, "用法: /clear [玩家] [--ender] [--confirm]");
+            Notification.errorKey(sender, "messages.clear.usage");
             return true;
         }
 
         OfflinePlayer target;
         if (parsed.target() == null) {
             if (!(sender instanceof Player player)) {
-                Notification.error(sender, "控制台执行时必须指定玩家");
+                Notification.errorKey(sender, "messages.clear.console_requires_player");
                 return true;
             }
             target = player;
         } else {
             target = PlayerLookup.resolve(parsed.target());
             if (target == null) {
-                Notification.error(sender, "找不到玩家: %s", parsed.target());
+                Notification.errorKey(sender, "messages.clear.player_not_found", parsed.target());
                 return true;
             }
         }
 
         boolean self = sender instanceof Player player && player.getUniqueId().equals(target.getUniqueId());
         if (!self && !sender.hasPermission(PERMISSION_CLEAR_OTHER)) {
-            Notification.error(sender, "你没有权限清空其他玩家的数据");
+            Notification.errorKey(sender, "messages.clear.no_permission_other");
             return true;
         }
         if (!target.isOnline() && !sender.hasPermission(PERMISSION_CLEAR_OFFLINE)) {
-            Notification.error(sender, "你没有权限清空离线玩家的数据");
+            Notification.errorKey(sender, "messages.clear.no_permission_offline");
             return true;
         }
 
@@ -95,25 +96,25 @@ public class Clear implements TabExecutor {
     }
 
     private void promptConfirmation(CommandSender sender, OfflinePlayer target, boolean ender, boolean self) {
-        String containerName = ender ? "末影箱" : "背包";
+        String containerName = containerName(ender);
         String confirmCommand = buildConfirmCommand(target, ender, self);
         String targetName = PlayerLookup.displayName(target);
 
         if (sender instanceof Player player) {
             TextComponent message = Component.text()
-                    .append(Component.text(targetName + " 的" + containerName + "即将被清空! ", NamedTextColor.GOLD))
-                    .append(Component.text("点击此处确认操作!", NamedTextColor.RED))
+                    .append(Component.text(EssentialsD.localization.format("messages.clear.confirm_prompt", targetName, containerName), NamedTextColor.GOLD))
+                    .append(Component.text(EssentialsD.localization.get("messages.clear.click_to_confirm"), NamedTextColor.RED))
                     .clickEvent(ClickEvent.runCommand(confirmCommand))
                     .build();
             Notification.warn(player, message);
             return;
         }
 
-        Notification.warn(sender, "%s 的%s即将被清空，请重新执行以下命令确认: %s", targetName, containerName, confirmCommand);
+        Notification.warnKey(sender, "messages.clear.confirm_console", targetName, containerName, confirmCommand);
     }
 
     private void executeClear(CommandSender sender, OfflinePlayer target, boolean ender, boolean self) {
-        String containerName = ender ? "末影箱" : "背包";
+        String containerName = containerName(ender);
         String targetName = PlayerLookup.displayName(target);
 
         if (target.isOnline()) {
@@ -132,10 +133,10 @@ public class Clear implements TabExecutor {
                 boolean success = OfflinePlayerDataAccess.clear(target, ender ? InspectManager.Mode.ENDER_CHEST : InspectManager.Mode.PLAYER_INVENTORY);
                 dispatchToSender(sender, () -> {
                     if (!success) {
-                        Notification.error(sender, "无法清空离线玩家 %s 的%s", targetName, containerName);
+                        Notification.errorKey(sender, "messages.clear.offline_failed", targetName, containerName);
                         return;
                     }
-                    Notification.info(sender, "已清空离线玩家 %s 的%s", targetName, containerName);
+                    Notification.infoKey(sender, "messages.clear.offline_done", targetName, containerName);
                 });
             });
         });
@@ -144,13 +145,13 @@ public class Clear implements TabExecutor {
     private void clearOnline(CommandSender sender, OfflinePlayer target, boolean ender, boolean self, String containerName, String targetName) {
         Player online = target.getPlayer();
         if (online == null) {
-            Notification.error(sender, "无法读取玩家 %s 的在线状态", targetName);
+            Notification.errorKey(sender, "messages.clear.read_online_failed", targetName);
             return;
         }
 
         Scheduler.runEntityTask(online, () -> {
             if (!online.isOnline()) {
-                dispatchToSender(sender, () -> Notification.error(sender, "玩家 %s 已下线", targetName));
+                dispatchToSender(sender, () -> Notification.errorKey(sender, "messages.clear.player_logged_out", targetName));
                 return;
             }
 
@@ -163,14 +164,14 @@ public class Clear implements TabExecutor {
 
             dispatchToSender(sender, () -> {
                 if (self) {
-                    Notification.info(sender, "已清空你的%s", containerName);
+                    Notification.infoKey(sender, "messages.clear.self_done", containerName);
                 } else {
-                    Notification.info(sender, "已清空 %s 的%s", targetName, containerName);
+                    Notification.infoKey(sender, "messages.clear.other_done", targetName, containerName);
                 }
             });
 
             if (!self) {
-                Notification.warn(online, "你的%s已被 %s 清空", containerName, sender.getName());
+                Notification.warnKey(online, "messages.clear.target_notified", containerName, sender.getName());
             }
         });
     }
@@ -199,6 +200,10 @@ public class Clear implements TabExecutor {
         }
         builder.append("--confirm");
         return builder.toString().trim();
+    }
+
+    private String containerName(boolean ender) {
+        return ender ? EssentialsD.localization.get("ui.clear.ender_chest") : EssentialsD.localization.get("ui.clear.inventory");
     }
 
     private List<String> filter(List<String> words, String token) {

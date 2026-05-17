@@ -1,6 +1,7 @@
 package et.xiaomu.essentialsd.tuis;
 
 import et.xiaomu.essentialsd.dtos.HomeInfo;
+import et.xiaomu.essentialsd.EssentialsD;
 import cn.lunadeer.utils.Notification;
 import cn.lunadeer.utils.stui.ListView;
 import cn.lunadeer.utils.stui.components.Line;
@@ -23,12 +24,12 @@ public class HomeList {
 
     public static void show(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
-            Notification.warn(sender, "只有玩家可以使用此命令");
+            Notification.warnKey(sender, "messages.common.player_only_command");
         } else {
             Player player = (Player) sender;
             List<HomeInfo> homes = HomeInfo.getHomesOf(((Player) sender).getUniqueId());
             if (homes.isEmpty()) {
-                Notification.warn(player, "你还没有设置家");
+                Notification.warnKey(player, "messages.home.no_home_set");
             } else {
                 int page = 1;
                 if (args.length == 1) {
@@ -39,10 +40,12 @@ public class HomeList {
                 }
 
                 ListView view = ListView.create(5, button());
-                view.title("Home 列表");
+                view.title(EssentialsD.localization.get("ui.home_list.title"));
 
                 for (HomeInfo home : homes) {
-                    Line line = Line.create().append(home.homeName).append(new CommandButton("传送", "/home " + home.homeName).build()).append(new CommandButton("删除", "/delhome " + home.homeName + " " + page).red().build());
+                    Line line = Line.create().append(home.homeName)
+                            .append(new CommandButton(EssentialsD.localization.get("ui.common.teleport_button"), "/home " + home.homeName).build())
+                            .append(new CommandButton(EssentialsD.localization.get("ui.common.delete_button"), "/delhome " + home.homeName + " " + page).red().build());
                     view.add(line);
                 }
 

@@ -2,7 +2,6 @@ package et.xiaomu.essentialsd.managers;
 
 import et.xiaomu.essentialsd.EssentialsD;
 import et.xiaomu.essentialsd.utils.MuteDuration;
-import cn.lunadeer.utils.Notification;
 import cn.lunadeer.utils.XLogger;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -55,23 +54,18 @@ public class ConfigManager {
     public Boolean chat_func_enable;
     public List<String> forbidWords;
     public Map<String, String> replaceWords;
-    public String forbidMessage;
     public long COOLDOWN_MS;
     public Boolean self_deception_mode;
     public long CMD_COOLDOWN_MS;
     public List<String> CMD_BANNED_LIST;
     public Boolean CMD_ENABLE;
-    public String CMD_CD_MESSAGE;
     public String allow_minimessage_perm;
     public int chat_max_length;
     public boolean chat_intercepting_identical_content;
-    public String chat_too_long_message;
-    public String chat_intercept_identical_content_message;
     public String MUTE_DEFAULT_DURATION;
     public String MUTE_MODE;
     public List<String> MUTE_BLOCKED_COMMANDS;
-    public String MUTE_BLOCK_MESSAGE;
-    public String MUTE_BLOCKED_COMMAND_MESSAGE;
+    private String _locale;
 
     public List<Material> forbidTakeItems = new ArrayList<>();
     public Boolean forbidNBTItem;
@@ -85,10 +79,10 @@ public class ConfigManager {
     public void reload() {
         this._plugin.reloadConfig();
         this._file = this._plugin.getConfig();
-        Notification.reloadPrefix(this._plugin);
 
         this._debug = this._file.getBoolean("Debug", false);
         XLogger.setDebug(this.isDebug());
+        this._locale = this._file.getString("Locale", "zh_CN");
 
         this._exp_bottle_ratio = (float) this._file.getDouble("ExpBottleRatio", 1.0F);
         this._combine_exp_orbs_enable = this._file.getBoolean("CombineExpOrbs.Enable", false);
@@ -136,18 +130,14 @@ public class ConfigManager {
         this.COOLDOWN_MS = this._file.getLong("chat.cooldown", 2000);
         this.chat_max_length = this._file.getInt("chat.max-length", 256);
         this.chat_intercepting_identical_content = this._file.getBoolean("chat.intercepting-identical-content", false);
-        this.chat_too_long_message = this._file.getString("chat.too-long-message", "消息内容过长，无法发送");
-        this.chat_intercept_identical_content_message = this._file.getString("chat.intercept-identical-content-message", "请不要重复发送相同消息");
 
         this.CMD_ENABLE = this._file.getBoolean("command-manager.Enable", false);
         this.CMD_COOLDOWN_MS = this._file.getLong("command-manager.cooldown", 2000);
         this.CMD_BANNED_LIST = normalizeCommands(this._file.getStringList("command-manager.banned_command"));
-        this.CMD_CD_MESSAGE = this._file.getString("command-manager.cd_message");
 
         this.forbidWords = this._file.getStringList("chat.forbid-keywords");
         this.replaceWords = get_replace_words();
         this.self_deception_mode = this._file.getBoolean("chat.self-deception-mode");
-        this.forbidMessage = this._file.getString("chat.forbid-message");
         this.MUTE_DEFAULT_DURATION = this._file.getString("chat.mute.default-duration", "permanent");
         if (!MuteDuration.parse(this.MUTE_DEFAULT_DURATION).isValid()) {
             XLogger.warn("chat.mute.default-duration 配置无效，已回退为 permanent");
@@ -155,8 +145,6 @@ public class ConfigManager {
         }
         this.MUTE_MODE = normalizeMuteMode(this._file.getString("chat.mute.mode", "block"));
         this.MUTE_BLOCKED_COMMANDS = normalizeCommands(this._file.getStringList("chat.mute.blocked-commands"));
-        this.MUTE_BLOCK_MESSAGE = this._file.getString("chat.mute.block-message", "你已被禁言");
-        this.MUTE_BLOCKED_COMMAND_MESSAGE = this._file.getString("chat.mute.blocked-command-message", "你已被禁言，暂时无法使用此命令");
         List<String> forbidItemNames = this._file.getStringList("Creative-ItemTake.banned-item");
 
         forbidTakeItems.clear();
@@ -453,5 +441,9 @@ public class ConfigManager {
 
     public Boolean getChatPureEnabled() {
         return this._chat_pure_enabled;
+    }
+
+    public String getLocale() {
+        return this._locale;
     }
 }

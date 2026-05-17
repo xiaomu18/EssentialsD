@@ -16,7 +16,7 @@ import java.util.List;
 public class Home implements TabExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player)) {
-            Notification.warn(sender, "只有玩家可以使用此命令");
+            Notification.warnKey(sender, "messages.common.player_only_command");
             return true;
         } else {
             Player player = (Player) sender;
@@ -24,7 +24,7 @@ public class Home implements TabExecutor {
             String homeName;
             if (args.length == 0) {
                 if (homes.isEmpty()) {
-                    Notification.error(player, "你还没有设置家");
+                    Notification.errorKey(player, "messages.home.no_home_set");
                     return true;
                 }
 
@@ -35,19 +35,19 @@ public class Home implements TabExecutor {
 
             HomeInfo home = HomeInfo.getHome(player.getUniqueId(), homeName);
             if (home == null) {
-                Notification.error(player, "不存在名为 %s 的家", homeName);
+                Notification.errorKey(player, "messages.home.not_found", homeName);
                 return true;
             } else if (EssentialsD.config.getHomeWorldBlacklist().contains(home.location.getWorld().getName())) {
-                Notification.error(player, "家 %s 所在世界 %s 不允许传送", homeName, home.location.getWorld().getName());
+                Notification.errorKey(player, "messages.home.world_blocked", homeName, home.location.getWorld().getName());
                 return true;
             } else {
                 try {
                     EssentialsD.tpManager.doTeleportDelayed(player, home.location, EssentialsD.config.getTpDelay(),
-                            () -> Notification.info(player, "正在传送到家 %s", homeName),
-                            () -> Notification.info(player, "成功传送到家 %s", homeName),
+                            () -> Notification.infoKey(player, "messages.home.teleporting", homeName),
+                            () -> Notification.infoKey(player, "messages.home.teleported", homeName),
                             EssentialsD.tpManager.createLogContext("home:" + homeName));
                 } catch (RuntimeException e) {
-                    Notification.error(player, "传送到家 %s 失败: %s", homeName, e.getMessage());
+                    Notification.errorKey(player, "messages.home.teleport_failed", homeName, e.getMessage());
                 }
 
                 return true;

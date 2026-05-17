@@ -1,5 +1,7 @@
 package et.xiaomu.essentialsd.utils;
 
+import et.xiaomu.essentialsd.EssentialsD;
+
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -56,14 +58,14 @@ public class MuteDuration {
 
     public static String formatRemaining(Long expiresAtMillis) {
         if (expiresAtMillis == null) {
-            return "永久";
+            return localize("duration.permanent", "永久");
         }
         return formatDuration(Math.max(0L, expiresAtMillis - System.currentTimeMillis()));
     }
 
     public static String formatDuration(Long durationMillis) {
         if (durationMillis == null) {
-            return "永久";
+            return localize("duration.permanent", "永久");
         }
 
         long totalSeconds = Math.max(1L, durationMillis / 1000L);
@@ -77,20 +79,28 @@ public class MuteDuration {
         long seconds = totalSeconds % 60L;
 
         StringBuilder builder = new StringBuilder();
-        appendUnit(builder, weeks, "周");
-        appendUnit(builder, days, "天");
-        appendUnit(builder, hours, "小时");
-        appendUnit(builder, minutes, "分钟");
+        appendUnit(builder, weeks, "duration.week", "周");
+        appendUnit(builder, days, "duration.day", "天");
+        appendUnit(builder, hours, "duration.hour", "小时");
+        appendUnit(builder, minutes, "duration.minute", "分钟");
         if (builder.length() == 0 || seconds > 0) {
-            appendUnit(builder, seconds, "秒");
+            appendUnit(builder, seconds, "duration.second", "秒");
         }
         return builder.toString();
     }
 
-    private static void appendUnit(StringBuilder builder, long value, String unit) {
+    private static void appendUnit(StringBuilder builder, long value, String key, String fallbackUnit) {
         if (value > 0) {
-            builder.append(value).append(unit);
+            builder.append(value).append(localize(key, fallbackUnit));
         }
+    }
+
+    private static String localize(String key, String fallback) {
+        if (EssentialsD.localization == null) {
+            return fallback;
+        }
+        String value = EssentialsD.localization.get(key);
+        return value == null || value.equals(key) ? fallback : value;
     }
 
     public static class ParseResult {

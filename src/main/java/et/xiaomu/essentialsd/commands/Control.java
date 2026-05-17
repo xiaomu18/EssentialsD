@@ -16,14 +16,16 @@ public class Control implements TabExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 0) {
-            Notification.info(sender, "用法: /essd <reload|version>");
+            Notification.infoKey(sender, "messages.config.usage");
             return true;
         }
         if ("reload".equalsIgnoreCase(args[0])) {
             EssentialsD.config.reload();
+            EssentialsD.localization.reload();
+            Notification.reloadPrefix();
             EssentialsD.muteManager.reload();
             EssentialsD.vanishManager.reload();
-            Notification.info(sender, "已重新读取配置文件");
+            Notification.infoKey(sender, "messages.config.reloaded");
             return true;
         }
         if ("version".equalsIgnoreCase(args[0])) {
@@ -32,7 +34,7 @@ public class Control implements TabExecutor {
             Notification.info(sender, EssentialsD.instance.getProjectUrl());
             return true;
         }
-        Notification.error(sender, "用法: /essd <reload|version>");
+        Notification.errorKey(sender, "messages.config.usage");
         return true;
     }
 

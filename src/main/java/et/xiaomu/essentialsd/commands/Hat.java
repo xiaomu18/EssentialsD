@@ -12,20 +12,20 @@ import org.jetbrains.annotations.NotNull;
 public class Hat implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player)) {
-            Notification.warn(sender, "只有玩家可以使用此命令");
+            Notification.warnKey(sender, "messages.common.player_only_command");
             return true;
         } else {
             Player player = (Player) sender;
             PlayerInventory inventory = player.getInventory();
             ItemStack right_hand_item = inventory.getItemInMainHand();
             if (right_hand_item.getType().isAir()) {
-                Notification.warn(player, "你的主手为空");
+                Notification.warnKey(player, "messages.show_item.empty_hand");
                 return true;
             } else {
                 ItemStack head_item = inventory.getHelmet();
                 inventory.setItemInMainHand(head_item);
                 inventory.setHelmet(right_hand_item);
-                Notification.info(player, "已将你的主物品放到了你的头上");
+                Notification.infoKey(player, "messages.hat.success");
                 return true;
             }
         }
