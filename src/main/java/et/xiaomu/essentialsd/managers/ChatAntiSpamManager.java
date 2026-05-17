@@ -139,7 +139,7 @@ public class ChatAntiSpamManager {
         return LEGACY_COLOR_PATTERN.matcher(stripped).replaceAll("");
     }
 
-    private void pruneAttempts(Deque<Long> attempts, long currentTime, int durationMs) {
+    private void pruneAttempts(Deque<Long> attempts, long currentTime, long durationMs) {
         long minTime = currentTime - durationMs;
         while (!attempts.isEmpty() && attempts.peekFirst() < minTime) {
             attempts.removeFirst();

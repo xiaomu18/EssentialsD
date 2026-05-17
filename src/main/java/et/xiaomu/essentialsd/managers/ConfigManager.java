@@ -61,7 +61,7 @@ public class ConfigManager {
     public Map<String, String> replaceWords;
     public long chat_anti_spam_cooldown_ms;
     public boolean chat_anti_spam_base_on_ip;
-    public int chat_rate_limit_duration_ms;
+    public long chat_rate_limit_duration_ms;
     public int chat_rate_limit_value;
     public boolean chat_repeat_interceptor_enable;
     public int chat_repeat_interceptor_sample_hits;
@@ -181,7 +181,7 @@ public class ConfigManager {
 
         this.chat_anti_spam_cooldown_ms = Math.max(0L, getChatLong("anti-spam.cooldown", "cooldown", 2000L));
         this.chat_anti_spam_base_on_ip = this._chatFile.getBoolean("anti-spam.base-on-ip", false);
-        this.chat_rate_limit_duration_ms = Math.max(0, this._chatFile.getInt("anti-spam.rate-limit.duration", 300000));
+        this.chat_rate_limit_duration_ms = getChatDurationMillis("anti-spam.rate-limit.duration", 300.0D);
         this.chat_rate_limit_value = Math.max(0, this._chatFile.getInt("anti-spam.rate-limit.value", 0));
         this.chat_repeat_interceptor_enable = this._chatFile.getBoolean("anti-spam.repeat-interceptor.enable", false);
         this.chat_repeat_interceptor_sample_hits = Math.max(1, this._chatFile.getInt("anti-spam.repeat-interceptor.sample-hits", 5));
@@ -263,6 +263,15 @@ public class ConfigManager {
             return this._chatFile.getLong(legacyPath, defaultValue);
         }
         return defaultValue;
+    }
+
+    private long getChatDurationMillis(String path, double defaultSeconds) {
+        double seconds = this._chatFile.getDouble(path, defaultSeconds);
+        if (seconds < 0.0D) {
+            XLogger.warn("%s 配置不能小于 0，已回退为 0", path);
+            return 0L;
+        }
+        return Math.round(seconds * 1000.0D);
     }
 
     private boolean getLegacyBooleanOrNested(String primaryPath, String legacyBooleanPath, boolean defaultValue) {

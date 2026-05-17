@@ -18,14 +18,13 @@ allow-minimessage-perm: "essd.chat.allow-use-minimessage"
 max-length: 256
 
 anti-spam:
-  # 单次发言冷却，单位毫秒。与 self-deception-mode 无关，命中后直接拦截。
+  # 单次发言冷却，单位毫秒。与 self-deception-mode 无关，命中后直接拦截并提示。
   cooldown: 2000
-  # 若为 true，则整个 anti-spam 基于 IP 而不是玩家 UUID。
-  base-on-ip: false
 
   rate-limit:
-    # 在 duration 毫秒内最多允许发送 value 条消息。命中 cooldown 的尝试也会计入这里。
-    duration: 300000
+    # 在 duration 秒内最多允许发送 value 条消息，支持小数。命中 cooldown 的尝试也会计入这里。设置为 0 代表不启用。
+    # 不吃 self-deception-mode
+    duration: 300.0
     value: 0
 
   repeat-interceptor:
@@ -34,14 +33,19 @@ anti-spam:
     # 缓存最近多少条已显示出去的消息作为判定样本。
     sample-hits: 5
     # 归一化 Levenshtein 相似度阈值，范围 0.0 - 1.0。
-    similarity-threshold: 0.9
+    similarity-threshold: 0.8
     # 样本过期时间，单位毫秒。
     sample-expiration: 300000
 
-# 要拦截的关键词。英文自动忽略大小写。受 self-deception-mode 管控。
+  # 若为 true，则整个 anti-spam 基于 IP 而不是玩家 UUID。
+  base-on-ip: false
+
+# 要拦截的关键词。英文自动忽略大小写，此处英文请小写。受 self-deception-mode 管控。
 forbid-keywords:
   - "傻逼"
   - "fuck"
+  - "damn"
+  - "bitch"
 
 replace-words:
   - ["abc1", "abc"]
