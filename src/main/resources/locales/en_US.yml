@@ -167,6 +167,7 @@ messages:
   show_item:
     empty_hand: "Your main hand is empty"
     broadcast: "Player %s showed an item "
+    cooldown: "Please wait %d seconds before showing another item"
     not_found: "That item no longer exists"
     not_visible: "You cannot view that item"
   sit:

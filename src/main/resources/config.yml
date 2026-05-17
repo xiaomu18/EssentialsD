@@ -14,6 +14,9 @@ CombineExpOrbs:
 # 经验吸收无冷却
 NoExpCoolDown: false
 
+# /showitem 展示冷却时间，单位秒
+show-item-cooldown: 0
+
 # 扩展合成表
 Recipes:
   CrowBar: true                 # 撬棍

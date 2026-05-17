@@ -30,6 +30,7 @@ public class ConfigManager {
     private Integer _tp_delay;
     private Integer _tp_cool_down;
     private Integer _tp_rtp_cool_down;
+    private Integer _show_item_cool_down;
     private Integer _tp_rtp_radius;
     private Boolean _tp_log_player_teleport;
     private List<String> _tp_world_blacklist;
@@ -118,6 +119,7 @@ public class ConfigManager {
         this._tp_delay = this._file.getInt("Teleport.Delay", 0);
         this._tp_cool_down = this._file.getInt("Teleport.CoolDown", 0);
         this._tp_rtp_cool_down = this._file.getInt("Teleport.RtpCoolDown", 0);
+        this._show_item_cool_down = Math.max(0, this._file.getInt("show-item-cooldown", 0));
         this._tp_tpa_expire = this._file.getInt("Teleport.TpaExpire", 30);
         this._tp_rtp_radius = this._file.getInt("Teleport.RtpRadius", 1000);
         this._tp_log_player_teleport = this._file.getBoolean("Teleport.log-player-teleport", false);
@@ -399,6 +401,10 @@ public class ConfigManager {
 
     public Integer getTpRtpCoolDown() {
         return this._tp_rtp_cool_down;
+    }
+
+    public Integer getShowItemCoolDown() {
+        return this._show_item_cool_down;
     }
 
     public Integer getTpTpaExpire() {

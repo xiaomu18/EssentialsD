@@ -167,6 +167,7 @@ messages:
   show_item:
     empty_hand: "你的主手为空"
     broadcast: "玩家 %s 展示了物品 "
+    cooldown: "请等待 %d 秒后再次展示物品"
     not_found: "物品不存在"
     not_visible: "你无法查看该物品"
   sit:
