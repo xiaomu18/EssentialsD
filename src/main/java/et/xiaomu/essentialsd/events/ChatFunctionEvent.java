@@ -270,7 +270,7 @@ public class ChatFunctionEvent implements Listener {
     }
 
     private void logSelfDeception(Player player, String message) {
-        EssentialsD.instance.getServer().getLogger().info("[自我欺骗] " + player.getName() + ": " + message);
+        EssentialsD.instance.getServer().getLogger().info("[仅自己可见] " + player.getName() + ": " + et.xiaomu.essentialsd.managers.ChatAntiSpamManager.removeColorSymbol(message));
     }
 
     private static String convertLegacyToMiniMessage(String message) {

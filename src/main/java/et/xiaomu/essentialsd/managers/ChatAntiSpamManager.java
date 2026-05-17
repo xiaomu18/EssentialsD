@@ -127,10 +127,10 @@ public class ChatAntiSpamManager {
     }
 
     public static int getVisibleLength(String message) {
-        return normalizeForDisplayLength(message).length();
+        return removeColorSymbol(message).length();
     }
 
-    private static String normalizeForDisplayLength(String message) {
+    public static String removeColorSymbol(String message) {
         if (message == null || message.isEmpty()) {
             return "";
         }
