@@ -31,8 +31,11 @@ messages:
   common:
     player_only_command: "只有玩家可以使用此命令"
   config:
-    reloaded: "已重新读取配置文件"
-    usage: "用法: /essd <reload|version>"
+    reloaded_all: "已重新读取全部配置文件"
+    reloaded_chat: "已重新读取聊天配置文件 chat.yml"
+    reloaded_locale: "已重新读取语言配置文件"
+    reloaded_config: "已重新读取主配置文件 config.yml"
+    usage: "用法: /essd <reload [chat|locale|config]|version>"
   api:
     console_requires_player: "以控制台身份执行时，必须指定玩家"
     player_not_online: "玩家 %s 不在线"

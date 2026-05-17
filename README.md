@@ -42,7 +42,7 @@
 | `/sit` | 原地坐下 | `essd.sit` |
 | `/suicide` | 自杀 | `essd.suicide` |
 | `/save` | 保存服务器 | `essd.save` |
-| `/essd <reload\|version>` | 重载配置、查看版本信息 | `essd.control` |
+| `/essd <reload [chat\|locale\|config]\|version>` | 重载配置、查看版本信息 | `essd.control` |
 
 ### 非命令功能
 
@@ -175,7 +175,7 @@
 - 掩耳盗铃模式
 - 与禁言系统联动
 
-常用聊天配置项包括 `chat.max-length`、`chat.intercepting-identical-content` 与 `chat.self-deception-mode`。
+聊天配置位于 `chat.yml`，常用配置项包括 `max-length`、`intercepting-identical-content` 与 `self-deception-mode`。
 
 ### command-manager
 

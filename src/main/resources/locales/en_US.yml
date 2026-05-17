@@ -31,8 +31,11 @@ messages:
   common:
     player_only_command: "Only players can use this command"
   config:
-    reloaded: "Configuration reloaded"
-    usage: "Usage: /essd <reload|version>"
+    reloaded_all: "Reloaded all configuration files"
+    reloaded_chat: "Reloaded chat configuration file chat.yml"
+    reloaded_locale: "Reloaded locale files"
+    reloaded_config: "Reloaded main configuration file config.yml"
+    usage: "Usage: /essd <reload [chat|locale|config]|version>"
   api:
     console_requires_player: "Console must specify a player"
     player_not_online: "Player %s is not online"

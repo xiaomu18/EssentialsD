@@ -5,8 +5,10 @@ import et.xiaomu.essentialsd.utils.MuteDuration;
 import cn.lunadeer.utils.XLogger;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,8 +16,11 @@ import java.util.Locale;
 import java.util.Map;
 
 public class ConfigManager {
+    private static final String CHAT_CONFIG_NAME = "chat.yml";
+
     private final EssentialsD _plugin;
     private FileConfiguration _file;
+    private FileConfiguration _chatFile;
     private boolean _debug;
     private float _exp_bottle_ratio;
     private Boolean _combine_exp_orbs_enable;
@@ -73,13 +78,28 @@ public class ConfigManager {
     public ConfigManager(EssentialsD plugin) {
         this._plugin = plugin;
         this._plugin.saveDefaultConfig();
+        ensureChatConfigExists();
         this.reload();
     }
 
     public void reload() {
+        reloadConfigOnly();
+        reloadChatOnly();
+    }
+
+    public void reloadConfigOnly() {
         this._plugin.reloadConfig();
         this._file = this._plugin.getConfig();
+        loadMainConfig();
+    }
 
+    public void reloadChatOnly() {
+        ensureChatConfigExists();
+        this._chatFile = YamlConfiguration.loadConfiguration(getChatConfigFile());
+        loadChatConfig();
+    }
+
+    private void loadMainConfig() {
         this._debug = this._file.getBoolean("Debug", false);
         XLogger.setDebug(this.isDebug());
         this._locale = this._file.getString("Locale", "zh_CN");
@@ -123,28 +143,9 @@ public class ConfigManager {
         this._vanish_block_private_message_to_vanished = this._file.getBoolean("vanish.block-private-message-to-vanished", false);
         this._vanish_enhanced_mode = this._file.getBoolean("vanish.enhanced-mode", false);
 
-        this.chat_func_enable = this._file.getBoolean("chat.Enable", false);
-        this._chat_pure_enabled = this._file.getBoolean("chat.pure.enable", false);
-        this.allow_minimessage_perm = this._file.getString("chat.allow-minimessage-perm", "essd.chat.allow-use-minimessage");
-
-        this.COOLDOWN_MS = this._file.getLong("chat.cooldown", 2000);
-        this.chat_max_length = this._file.getInt("chat.max-length", 256);
-        this.chat_intercepting_identical_content = this._file.getBoolean("chat.intercepting-identical-content", false);
-
         this.CMD_ENABLE = this._file.getBoolean("command-manager.Enable", false);
         this.CMD_COOLDOWN_MS = this._file.getLong("command-manager.cooldown", 2000);
         this.CMD_BANNED_LIST = normalizeCommands(this._file.getStringList("command-manager.banned_command"));
-
-        this.forbidWords = this._file.getStringList("chat.forbid-keywords");
-        this.replaceWords = get_replace_words();
-        this.self_deception_mode = this._file.getBoolean("chat.self-deception-mode");
-        this.MUTE_DEFAULT_DURATION = this._file.getString("chat.mute.default-duration", "permanent");
-        if (!MuteDuration.parse(this.MUTE_DEFAULT_DURATION).isValid()) {
-            XLogger.warn("chat.mute.default-duration 配置无效，已回退为 permanent");
-            this.MUTE_DEFAULT_DURATION = "permanent";
-        }
-        this.MUTE_MODE = normalizeMuteMode(this._file.getString("chat.mute.mode", "block"));
-        this.MUTE_BLOCKED_COMMANDS = normalizeCommands(this._file.getStringList("chat.mute.blocked-commands"));
         List<String> forbidItemNames = this._file.getStringList("Creative-ItemTake.banned-item");
 
         forbidTakeItems.clear();
@@ -166,15 +167,50 @@ public class ConfigManager {
         this._db_pass = this._file.getString("Database.Pass", "postgres");
     }
 
+    private void loadChatConfig() {
+        this.chat_func_enable = this._chatFile.getBoolean("Enable", false);
+        this._chat_pure_enabled = this._chatFile.getBoolean("pure.enable", false);
+        this.allow_minimessage_perm = this._chatFile.getString("allow-minimessage-perm", "essd.chat.allow-use-minimessage");
+
+        this.COOLDOWN_MS = this._chatFile.getLong("cooldown", 2000);
+        this.chat_max_length = this._chatFile.getInt("max-length", 256);
+        this.chat_intercepting_identical_content = this._chatFile.getBoolean("intercepting-identical-content", false);
+
+        this.forbidWords = this._chatFile.getStringList("forbid-keywords");
+        this.replaceWords = getReplaceWords(this._chatFile);
+        this.self_deception_mode = this._chatFile.getBoolean("self-deception-mode", false);
+        this.MUTE_DEFAULT_DURATION = this._chatFile.getString("mute.default-duration", "permanent");
+        if (!MuteDuration.parse(this.MUTE_DEFAULT_DURATION).isValid()) {
+            XLogger.warn("chat.yml mute.default-duration 配置无效，已回退为 permanent");
+            this.MUTE_DEFAULT_DURATION = "permanent";
+        }
+        this.MUTE_MODE = normalizeMuteMode(this._chatFile.getString("mute.mode", "block"));
+        this.MUTE_BLOCKED_COMMANDS = normalizeCommands(this._chatFile.getStringList("mute.blocked-commands"));
+    }
+
     public FileConfiguration getConfig() {
         return this._file;
     }
 
-    private Map<String, String> get_replace_words() {
+    public FileConfiguration getChatConfig() {
+        return this._chatFile;
+    }
+
+    private void ensureChatConfigExists() {
+        if (!getChatConfigFile().exists()) {
+            this._plugin.saveResource(CHAT_CONFIG_NAME, false);
+        }
+    }
+
+    private File getChatConfigFile() {
+        return new File(this._plugin.getDataFolder(), CHAT_CONFIG_NAME);
+    }
+
+    private Map<String, String> getReplaceWords(FileConfiguration file) {
         Map<String, String> wordReplacements = new HashMap<>();
 
         // 获取 replace-words 列表
-        List<?> replaceList = this._file.getList("chat.replace-words", new ArrayList<>());
+        List<?> replaceList = file.getList("replace-words", new ArrayList<>());
 
         for (Object entryObj : replaceList) {
             if (entryObj instanceof List<?>) {
@@ -208,7 +244,7 @@ public class ConfigManager {
             return "self-deception";
         }
         if (!normalized.equals("block") && !normalized.equals("1") && !normalized.equals("self-deception")) {
-            XLogger.warn("chat.mute.mode 配置无效，已回退为 block");
+            XLogger.warn("chat.yml mute.mode 配置无效，已回退为 block");
             return "block";
         }
         return normalized.equals("1") ? "block" : normalized;

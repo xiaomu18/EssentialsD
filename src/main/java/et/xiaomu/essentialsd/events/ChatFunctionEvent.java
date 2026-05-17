@@ -149,7 +149,7 @@ public class ChatFunctionEvent implements Listener {
             StringBuilder chatFormat = new StringBuilder();
 
             // 获取 chat format 列表
-            List<Map<?, ?>> chatFormatList = EssentialsD.config.getConfig().getMapList("chat.format");
+            List<Map<?, ?>> chatFormatList = EssentialsD.config.getChatConfig().getMapList("format");
 
             for (Map<?, ?> entry : chatFormatList) {
                 // 获取权限（可能为空）
