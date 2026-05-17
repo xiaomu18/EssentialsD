@@ -44,8 +44,9 @@ messages:
     vanished_blocked: "你当前处于隐身状态，无法在公屏发言"
     authme_not_logged_in: "请先完成登录验证再尝试发送消息"
     cooldown: "你发言太快, 请稍等片刻后重新发送"
+    rate_limit: "你在短时间内发送了过多消息，请稍后再试"
     too_long: "消息内容过长，无法发送"
-    duplicate: "请不要重复发送相同消息"
+    duplicate: "请不要重复发送相同或相似消息"
     forbid: "请不要说脏话"
     pure_notice: "你已开启纯净模式，仅位于纯净列表中的玩家可见你的消息，其消息对你可见。使用 /pure 关闭纯净模式，使用 /purelist 命令管理纯净列表。"
   command:

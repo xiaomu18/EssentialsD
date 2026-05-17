@@ -59,14 +59,21 @@ public class ConfigManager {
     public Boolean chat_func_enable;
     public List<String> forbidWords;
     public Map<String, String> replaceWords;
-    public long COOLDOWN_MS;
-    public Boolean self_deception_mode;
+    public long chat_anti_spam_cooldown_ms;
+    public boolean chat_anti_spam_base_on_ip;
+    public int chat_rate_limit_duration_ms;
+    public int chat_rate_limit_value;
+    public boolean chat_repeat_interceptor_enable;
+    public int chat_repeat_interceptor_sample_hits;
+    public double chat_repeat_interceptor_similarity_threshold;
+    public int chat_repeat_interceptor_sample_expiration_ms;
+    public boolean chat_self_deception_enable;
+    public boolean chat_self_deception_show_to_same_ip_players;
     public long CMD_COOLDOWN_MS;
     public List<String> CMD_BANNED_LIST;
     public Boolean CMD_ENABLE;
     public String allow_minimessage_perm;
     public int chat_max_length;
-    public boolean chat_intercepting_identical_content;
     public String MUTE_DEFAULT_DURATION;
     public String MUTE_MODE;
     public List<String> MUTE_BLOCKED_COMMANDS;
@@ -172,13 +179,26 @@ public class ConfigManager {
         this._chat_pure_enabled = this._chatFile.getBoolean("pure.enable", false);
         this.allow_minimessage_perm = this._chatFile.getString("allow-minimessage-perm", "essd.chat.allow-use-minimessage");
 
-        this.COOLDOWN_MS = this._chatFile.getLong("cooldown", 2000);
+        this.chat_anti_spam_cooldown_ms = Math.max(0L, getChatLong("anti-spam.cooldown", "cooldown", 2000L));
+        this.chat_anti_spam_base_on_ip = this._chatFile.getBoolean("anti-spam.base-on-ip", false);
+        this.chat_rate_limit_duration_ms = Math.max(0, this._chatFile.getInt("anti-spam.rate-limit.duration", 300000));
+        this.chat_rate_limit_value = Math.max(0, this._chatFile.getInt("anti-spam.rate-limit.value", 0));
+        this.chat_repeat_interceptor_enable = this._chatFile.getBoolean("anti-spam.repeat-interceptor.enable", false);
+        this.chat_repeat_interceptor_sample_hits = Math.max(1, this._chatFile.getInt("anti-spam.repeat-interceptor.sample-hits", 5));
+        this.chat_repeat_interceptor_similarity_threshold = clampThreshold(
+                this._chatFile.getDouble("anti-spam.repeat-interceptor.similarity-threshold", 0.9D),
+                "chat.yml anti-spam.repeat-interceptor.similarity-threshold"
+        );
+        this.chat_repeat_interceptor_sample_expiration_ms = Math.max(0, this._chatFile.getInt("anti-spam.repeat-interceptor.sample-expiration", 300000));
         this.chat_max_length = this._chatFile.getInt("max-length", 256);
-        this.chat_intercepting_identical_content = this._chatFile.getBoolean("intercepting-identical-content", false);
 
-        this.forbidWords = this._chatFile.getStringList("forbid-keywords");
+        this.forbidWords = this._chatFile.getStringList("forbid-keywords").stream()
+                .map(word -> word == null ? "" : word.trim().toLowerCase(Locale.ROOT))
+                .filter(word -> !word.isBlank())
+                .toList();
         this.replaceWords = getReplaceWords(this._chatFile);
-        this.self_deception_mode = this._chatFile.getBoolean("self-deception-mode", false);
+        this.chat_self_deception_enable = getLegacyBooleanOrNested("self-deception-mode.enable", "self-deception-mode", false);
+        this.chat_self_deception_show_to_same_ip_players = this._chatFile.getBoolean("self-deception-mode.show-to-same-ip-players", false);
         this.MUTE_DEFAULT_DURATION = this._chatFile.getString("mute.default-duration", "permanent");
         if (!MuteDuration.parse(this.MUTE_DEFAULT_DURATION).isValid()) {
             XLogger.warn("chat.yml mute.default-duration 配置无效，已回退为 permanent");
@@ -233,6 +253,33 @@ public class ConfigManager {
         }
 
         return wordReplacements;
+    }
+
+    private long getChatLong(String primaryPath, String legacyPath, long defaultValue) {
+        if (this._chatFile.contains(primaryPath)) {
+            return this._chatFile.getLong(primaryPath, defaultValue);
+        }
+        if (legacyPath != null && this._chatFile.contains(legacyPath)) {
+            return this._chatFile.getLong(legacyPath, defaultValue);
+        }
+        return defaultValue;
+    }
+
+    private boolean getLegacyBooleanOrNested(String primaryPath, String legacyBooleanPath, boolean defaultValue) {
+        if (this._chatFile.contains(primaryPath)) {
+            return this._chatFile.getBoolean(primaryPath, defaultValue);
+        }
+        if (legacyBooleanPath != null && this._chatFile.isBoolean(legacyBooleanPath)) {
+            return this._chatFile.getBoolean(legacyBooleanPath, defaultValue);
+        }
+        return defaultValue;
+    }
+
+    private double clampThreshold(double value, String path) {
+        if (value < 0.0D || value > 1.0D) {
+            XLogger.warn("%s 配置超出范围，已限制到 0.0-1.0", path);
+        }
+        return Math.max(0.0D, Math.min(1.0D, value));
     }
 
     private String normalizeMuteMode(String mode) {

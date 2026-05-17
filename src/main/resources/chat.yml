@@ -3,6 +3,7 @@ Enable: false
 pure:
   # 是否启用 Pure 纯净模式。关闭后不会应用纯净聊天过滤，且玩家不能开启 /pure。
   enable: false
+
 # 聊天格式，可以使用 minimessage 格式
 # 若要使用原生颜色代码必须使用 § 而不是 &
 format:
@@ -12,22 +13,50 @@ format:
 
 # 拥有此权限的玩家发送 minimessage 格式的消息将会得到解析
 allow-minimessage-perm: "essd.chat.allow-use-minimessage"
-cooldown: 2000 # 毫秒 (1s=1000ms)
+
+# 聊天长度控制（Minecraft 最多允许 256 个字符）
 max-length: 256
-intercepting-identical-content: false
+
+anti-spam:
+  # 单次发言冷却，单位毫秒。与 self-deception-mode 无关，命中后直接拦截。
+  cooldown: 2000
+  # 若为 true，则整个 anti-spam 基于 IP 而不是玩家 UUID。
+  base-on-ip: false
+
+  rate-limit:
+    # 在 duration 毫秒内最多允许发送 value 条消息。命中 cooldown 的尝试也会计入这里。
+    duration: 300000
+    value: 0
+
+  repeat-interceptor:
+    # 重复/相似消息拦截。受 self-deception-mode 管控。
+    enable: false
+    # 缓存最近多少条已显示出去的消息作为判定样本。
+    sample-hits: 5
+    # 归一化 Levenshtein 相似度阈值，范围 0.0 - 1.0。
+    similarity-threshold: 0.9
+    # 样本过期时间，单位毫秒。
+    sample-expiration: 300000
+
+# 要拦截的关键词。英文自动忽略大小写。受 self-deception-mode 管控。
 forbid-keywords:
   - "傻逼"
   - "fuck"
+
 replace-words:
   - ["abc1", "abc"]
-# 掩耳盗铃模式: 开启后若被拦截消息仍可以发送，但消息不会被广播，而是仅自己可见
-# 同样作用于敏感词与重复消息拦截
-self-deception-mode: false
+
+self-deception-mode:
+  # 开启后，重复/相似消息与敏感词拦截可以改为“看起来发送成功”，而不是直接阻止。
+  enable: false
+  # 若为 true，则自我欺骗消息不仅自己可见，也会对相同 IP 的在线玩家可见。
+  show-to-same-ip-players: false
+
 mute:
   # 留空时使用此默认禁言时长，支持 30m / 1h / 7d / permanent
   default-duration: "permanent"
   # 1 或 block: 直接阻止发送
-  # 2 或 self-deception: 消息看起来发出去了，但只对自己可见
+  # 2 或 self-deception: 消息看起来发出去了，但仅对自己 / 同 IP 可见（取决于 self-deception-mode 配置）
   mode: "block"
   # 被禁言时额外禁止使用的命令，仅匹配主命令名
   blocked-commands:

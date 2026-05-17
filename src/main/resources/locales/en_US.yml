@@ -44,8 +44,9 @@ messages:
     vanished_blocked: "You cannot chat publicly while vanished"
     authme_not_logged_in: "Please complete login verification before chatting"
     cooldown: "You are chatting too fast, please wait a moment"
+    rate_limit: "You have sent too many messages in a short time, please try again later"
     too_long: "Your message is too long to send"
-    duplicate: "Please do not send the same message repeatedly"
+    duplicate: "Please do not send identical or highly similar messages repeatedly"
     forbid: "Please do not use inappropriate language"
     pure_notice: "Pure mode is enabled. Only players in your pure list can see your messages, and their messages are visible to you. Use /pure to disable it and /purelist to manage the list."
   command:

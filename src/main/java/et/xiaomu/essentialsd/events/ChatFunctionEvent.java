@@ -1,6 +1,7 @@
 package et.xiaomu.essentialsd.events;
 
 import et.xiaomu.essentialsd.EssentialsD;
+import et.xiaomu.essentialsd.managers.ChatAntiSpamManager;
 import et.xiaomu.essentialsd.managers.MuteManager;
 import cn.lunadeer.utils.Notification;
 import fr.xephi.authme.api.v3.AuthMeApi;
@@ -10,7 +11,6 @@ import net.kyori.adventure.text.TextReplacementConfig;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -20,24 +20,22 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
 public class ChatFunctionEvent implements Listener {
-    private final Map<UUID, Long> lastChatTimes = new ConcurrentHashMap<>();
-    private final Map<UUID, String> lastSuccessfulMessages = new ConcurrentHashMap<>();
-
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onChat(AsyncPlayerChatEvent event) {
 
         Player player = event.getPlayer();
-        UUID uuid = player.getUniqueId();
         String originalMessage = event.getMessage();
+        String normalizedMessage = ChatAntiSpamManager.normalizeForDetection(originalMessage);
         boolean self_deception = false;
+        String antiSpamIdentityKey = null;
+        long currentTime = System.currentTimeMillis();
 
         if (EssentialsD.vanishManager.isVanished(player) && !EssentialsD.vanishManager.canChatWhileVanished(player)) {
             event.setCancelled(true);
@@ -64,52 +62,47 @@ public class ChatFunctionEvent implements Listener {
         }
 
         if (EssentialsD.config.chat_func_enable && !player.isOp()) {
-            long currentTime = System.currentTimeMillis();
+            ChatAntiSpamManager.CheckResult antiSpamResult = EssentialsD.chatAntiSpamManager.checkAttempt(player, normalizedMessage, currentTime);
+            antiSpamIdentityKey = antiSpamResult.identityKey();
 
-            // 检查冷却
-            if (lastChatTimes.containsKey(uuid)) {
-                long lastChatTime = lastChatTimes.get(uuid);
-
-                if (currentTime - lastChatTime < EssentialsD.config.COOLDOWN_MS) {
-                    lastChatTimes.put(uuid, currentTime);
-                    // 取消聊天并发送提示
-                    event.setCancelled(true);
-                    Notification.warnKey(player, "messages.chat.cooldown");
-                    return;
-                }
+            if (antiSpamResult.type() == ChatAntiSpamManager.CheckType.RATE_LIMIT) {
+                event.setCancelled(true);
+                Notification.warnKey(player, "messages.chat.rate_limit");
+                return;
             }
 
-            // 更新最后发言时间
-            lastChatTimes.put(uuid, currentTime);
+            if (antiSpamResult.type() == ChatAntiSpamManager.CheckType.COOLDOWN) {
+                event.setCancelled(true);
+                EssentialsD.chatAntiSpamManager.recordRateLimitAttempt(antiSpamIdentityKey, currentTime);
+                Notification.warnKey(player, "messages.chat.cooldown");
+                return;
+            }
 
             if (EssentialsD.config.chat_max_length > 0
-                    && getVisibleMessageLength(originalMessage) > EssentialsD.config.chat_max_length) {
+                    && ChatAntiSpamManager.getVisibleLength(originalMessage) > EssentialsD.config.chat_max_length) {
                 event.setCancelled(true);
                 Notification.warnKey(player, "messages.chat.too_long");
                 return;
             }
 
-            if (EssentialsD.config.chat_intercepting_identical_content) {
-                String lastSuccessfulMessage = lastSuccessfulMessages.get(uuid);
-                if (lastSuccessfulMessage != null && lastSuccessfulMessage.equals(originalMessage)) {
-                    event.setCancelled(true);
-                    if (!EssentialsD.config.self_deception_mode) {
-                        Notification.warnKey(player, "messages.chat.duplicate");
-                        return;
-                    }
-                    self_deception = true;
+            if (antiSpamResult.type() == ChatAntiSpamManager.CheckType.REPEAT) {
+                event.setCancelled(true);
+                if (!EssentialsD.config.chat_self_deception_enable) {
+                    Notification.warnKey(player, "messages.chat.duplicate");
+                    return;
                 }
+                self_deception = true;
             }
 
             for (String block_string : EssentialsD.config.forbidWords) {
-                if (event.getMessage().contains(block_string)) {
+                if (normalizedMessage.contains(block_string)) {
                     event.setCancelled(true);
-                    if (!EssentialsD.config.self_deception_mode) {
+                    if (!EssentialsD.config.chat_self_deception_enable) {
                         Notification.warnKey(player, "messages.chat.forbid");
                         return;
-                    } else {
-                        self_deception = true;
                     }
+                    self_deception = true;
+                    break;
                 }
             }
 
@@ -130,11 +123,11 @@ public class ChatFunctionEvent implements Listener {
         if (!EssentialsD.config.chat_func_enable) {
             if (self_deception) {
                 event.setCancelled(true);
-                player.sendMessage(Component.text("<" + player.getName() + "> " + event.getMessage()));
-                EssentialsD.instance.getServer().getLogger().info("[仅自己可见] " + player.getName() + ": " + event.getMessage());
+                Component message = Component.text("<" + player.getName() + "> " + event.getMessage());
+                sendSelfDeceptionMessage(player, message, event.getRecipients());
+                logSelfDeception(player, event.getMessage());
                 return;
             }
-            recordSuccessfulMessage(uuid, originalMessage);
             filterRecipients(event, player);
             return;
         }
@@ -194,7 +187,6 @@ public class ChatFunctionEvent implements Listener {
 
             Component parsed = MiniMessage.miniMessage().deserialize(convertLegacyToMiniMessage(chatFormat.toString()));
 
-            TextReplacementConfig replacement;
             String replaceMessage;
 
             if (player.hasPermission(EssentialsD.config.allow_minimessage_perm)) {
@@ -203,7 +195,7 @@ public class ChatFunctionEvent implements Listener {
                 replaceMessage = event.getMessage().replace("<", "\\<");
             }
 
-            replacement = TextReplacementConfig.builder()
+            TextReplacementConfig replacement = TextReplacementConfig.builder()
                     .matchLiteral("$player_message$")
                     .replacement(MiniMessage.miniMessage().deserialize(convertLegacyToMiniMessage(replaceMessage))) // 纯文本，不会解析 MiniMessage
                     .build();
@@ -212,21 +204,26 @@ public class ChatFunctionEvent implements Listener {
             parsed = parsed.replaceText(replacement);
 
             if (self_deception) {
-                player.sendMessage(parsed);
-                EssentialsD.instance.getServer().getLogger().info("[仅自己可见] " + player.getName() + ": " + event.getMessage());
+                sendSelfDeceptionMessage(player, parsed, event.getRecipients());
+                logSelfDeception(player, event.getMessage());
+                if (antiSpamIdentityKey != null) {
+                    EssentialsD.chatAntiSpamManager.recordRateLimitAttempt(antiSpamIdentityKey, currentTime);
+                    EssentialsD.chatAntiSpamManager.recordVisibleMessage(antiSpamIdentityKey, normalizedMessage, currentTime);
+                }
                 return;
             }
 
             broadcastFiltered(player, parsed, event.getRecipients());
-            recordSuccessfulMessage(uuid, originalMessage);
+            if (antiSpamIdentityKey != null) {
+                EssentialsD.chatAntiSpamManager.recordRateLimitAttempt(antiSpamIdentityKey, currentTime);
+                EssentialsD.chatAntiSpamManager.recordVisibleMessage(antiSpamIdentityKey, normalizedMessage, currentTime);
+            }
         }
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        UUID uuid = event.getPlayer().getUniqueId();
-        lastChatTimes.remove(uuid);
-        lastSuccessfulMessages.remove(uuid);
+        EssentialsD.chatAntiSpamManager.clearPlayer(event.getPlayer());
     }
 
     private void filterRecipients(AsyncPlayerChatEvent event, Player sender) {
@@ -246,15 +243,34 @@ public class ChatFunctionEvent implements Listener {
         Bukkit.getConsoleSender().sendMessage(message);
     }
 
-    private void recordSuccessfulMessage(UUID uuid, String message) {
-        lastSuccessfulMessages.put(uuid, message);
+    private void sendSelfDeceptionMessage(Player sender, Component message, Set<Player> recipients) {
+        sender.sendMessage(message);
+        if (!EssentialsD.config.chat_self_deception_show_to_same_ip_players) {
+            return;
+        }
+
+        String senderIp = MuteManager.normalizeIp(MuteManager.getPlayerIp(sender));
+        if (senderIp == null || senderIp.isBlank()) {
+            return;
+        }
+
+        for (Player recipient : recipients) {
+            if (recipient.getUniqueId().equals(sender.getUniqueId())) {
+                continue;
+            }
+            String recipientIp = MuteManager.normalizeIp(MuteManager.getPlayerIp(recipient));
+            if (!Objects.equals(senderIp, recipientIp)) {
+                continue;
+            }
+            if (!EssentialsD.pureManager.canMutuallySee(sender.getUniqueId(), recipient.getUniqueId())) {
+                continue;
+            }
+            recipient.sendMessage(message);
+        }
     }
 
-    private static int getVisibleMessageLength(String message) {
-        if (message == null || message.isEmpty()) {
-            return 0;
-        }
-        return ChatColor.stripColor(message).length();
+    private void logSelfDeception(Player player, String message) {
+        EssentialsD.instance.getServer().getLogger().info("[自我欺骗] " + player.getName() + ": " + message);
     }
 
     private static String convertLegacyToMiniMessage(String message) {

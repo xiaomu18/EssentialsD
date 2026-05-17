@@ -24,6 +24,7 @@ public class Control implements TabExecutor {
         if ("reload".equalsIgnoreCase(args[0])) {
             if (args.length == 1) {
                 EssentialsD.config.reload();
+                EssentialsD.chatAntiSpamManager.reset();
                 EssentialsD.localization.reload();
                 Notification.reloadPrefix();
                 EssentialsD.muteManager.reload();
@@ -36,6 +37,7 @@ public class Control implements TabExecutor {
                 switch (target) {
                     case "chat" -> {
                         EssentialsD.config.reloadChatOnly();
+                        EssentialsD.chatAntiSpamManager.reset();
                         Notification.infoKey(sender, "messages.config.reloaded_chat");
                         return true;
                     }

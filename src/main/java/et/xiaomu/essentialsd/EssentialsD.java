@@ -13,6 +13,7 @@ import et.xiaomu.essentialsd.commands.warp.Warp;
 import et.xiaomu.essentialsd.commands.warp.Warps;
 import et.xiaomu.essentialsd.events.*;
 import et.xiaomu.essentialsd.managers.ConfigManager;
+import et.xiaomu.essentialsd.managers.ChatAntiSpamManager;
 import et.xiaomu.essentialsd.managers.DatabaseTables;
 import et.xiaomu.essentialsd.managers.inspect.InspectManager;
 import et.xiaomu.essentialsd.managers.MuteManager;
@@ -48,6 +49,7 @@ public final class EssentialsD extends JavaPlugin {
     public static DatabaseManager database;
     public static MuteManager muteManager;
     public static PureManager pureManager;
+    public static ChatAntiSpamManager chatAntiSpamManager;
     public static InspectManager inspectManager;
     public static VanishManager vanishManager;
     public static LocalizationService localization;
@@ -70,6 +72,7 @@ public final class EssentialsD extends JavaPlugin {
         DatabaseTables.migrate();
         muteManager = new MuteManager();
         pureManager = new PureManager();
+        chatAntiSpamManager = new ChatAntiSpamManager();
         new Scheduler(this);
         tpManager = new TeleportManager();
         inspectManager = new InspectManager();
@@ -209,6 +212,7 @@ public final class EssentialsD extends JavaPlugin {
         vanishManager = null;
         muteManager = null;
         pureManager = null;
+        chatAntiSpamManager = null;
         localization = null;
         database = null;
         config = null;

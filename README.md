@@ -51,7 +51,7 @@
 - 支持隐身增强模式，配合 `ProtocolLib` 在数据包层面隐藏玩家
 - 支持拦截向隐身玩家发送的常见私聊命令
 - 支持隐身时关闭碰撞、禁止攻击玩家、静默打开容器
-- 支持聊天格式自定义、敏感词拦截、敏感词替换、聊天冷却、长度限制、重复消息拦截
+- 支持聊天格式自定义、敏感词拦截、敏感词替换、聊天冷却、限流、长度限制、重复/相似消息拦截
 - 支持禁言系统，含临时禁言、永久禁言、IP 禁言、额外禁用命令
 - 支持命令冷却与全局禁用指定一级命令
 - 支持创造模式拿取特定物品或带 NBT 物品的限制
@@ -169,13 +169,13 @@
 - 基于 `PlaceholderAPI` 的聊天格式
 - MiniMessage 与原版 `§` 颜色代码混用
 - 敏感词拦截与替换
-- 聊天冷却
+- 聊天冷却与时间窗限流
 - 聊天长度限制
-- 重复消息拦截
+- 重复/相似消息拦截
 - 掩耳盗铃模式
 - 与禁言系统联动
 
-聊天配置位于 `chat.yml`，常用配置项包括 `max-length`、`intercepting-identical-content` 与 `self-deception-mode`。
+聊天配置位于 `chat.yml`，常用配置项包括 `anti-spam.cooldown`、`anti-spam.rate-limit.*`、`anti-spam.repeat-interceptor.*` 与 `self-deception-mode.*`。
 
 ### command-manager
 
